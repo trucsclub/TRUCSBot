@@ -1,0 +1,17 @@
+# TRU CS Club Bot
+
+This is the official Discord bot for the TRUSU Computing Science Club Discord channel, which you can access [here](https://trucsclub.ca/discord). 
+
+It uses the [DSharpPlus](https://github.com/DSharpPlus/DSharpPlus) library to interact with Discord. It also uses [IGDB .NET SDK](https://github.com/kamranayub/igdb-dotnet) for interacting with [IGDB.com](https://www.igdb.com/) for our Game Night recommendations. 
+
+## Building
+
+Build it like any other .NET Core project :)
+
+## Running
+
+You need to edit your settings file with your own Discord API key.
+
+## Pushing to our server (Club only)
+
+Run publish.bat and copy those files over
