@@ -21,7 +21,7 @@ namespace TRUCSBot.Commands
     {
         private ILogger _logger;
 
-        public GameNightSuggestionCommands(ILogger logger)
+        public GameNightSuggestionCommands(ILogger<GameNightSuggestionCommands> logger)
         {
             _logger = logger;
         }

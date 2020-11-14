@@ -16,7 +16,7 @@ namespace TRUCSBot.Commands
     {
         private ILogger _logger;
 
-        public BoardCommands(ILogger logger)
+        public BoardCommands(ILogger<BoardCommands> logger)
         {
             _logger = logger;
         }

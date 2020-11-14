@@ -82,7 +82,7 @@ namespace TRUCSBot
                 TokenType = TokenType.Bot
             });
 
-            DiscordCommands = Discord.UseCommandsNext(new CommandsNextConfiguration() { CaseSensitive = true, StringPrefixes = new[] { Settings.CommandPrefix }, EnableDms = true });
+            DiscordCommands = Discord.UseCommandsNext(new CommandsNextConfiguration() { CaseSensitive = true, StringPrefixes = new[] { Settings.CommandPrefix }, EnableDms = true, Services = _serviceProvider });
 
             DiscordCommands.RegisterCommands<Commands.AdministrativeCommands>();
             DiscordCommands.RegisterCommands<Commands.AnnouncementCommands>();
@@ -224,6 +224,7 @@ namespace TRUCSBot
         private async Task Discord_ClientErrored(DiscordClient sender, DSharpPlus.EventArgs.ClientErrorEventArgs e)
         {
             _logger.LogError("Discord client errored", e);
+            await Task.CompletedTask;
         }
 
         private async Task Discord_GuildMemberRemoved(DiscordClient sender, DSharpPlus.EventArgs.GuildMemberRemoveEventArgs e)
@@ -280,6 +281,7 @@ namespace TRUCSBot
                 statusTimer.Start();
             }
 
+            await Task.CompletedTask;
         }
 
         private async void StatusTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
