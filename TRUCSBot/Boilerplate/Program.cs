@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -11,12 +14,15 @@ namespace TRUCSBot
 
         static void Main(string[] args)
         {
-            var application = new Application();
-            application.Run(args);
+            var serviceCollection = new ServiceCollection();
 
+            var application = new Application();
+            application.ConfigureServices(serviceCollection);
+                       
+            application.Run(args);
+            
             Application.Current.ShutdownCompleted += (s, e) =>
             {
-                Console.WriteLine("Application shutdown complete.");
                 _quitEvent.Set();
             };
 

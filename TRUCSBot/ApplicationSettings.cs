@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
 
@@ -7,32 +8,28 @@ using Newtonsoft.Json;
 
 namespace TRUCSBot
 {
-    public class ApplicationSettings
+    public class ApplicationSettings : TylorsTech.SimpleJsonSettings.StronglyTypedSettingsDefinition
     {
-        [JsonProperty(NullValueHandling = NullValueHandling.Include)]
+        //Stop class from being accidentally created
+        private ApplicationSettings() { }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string DebugToken { get; set; }
 
-        [JsonProperty(NullValueHandling = NullValueHandling.Include)]
+        [DefaultValue("INSERT TOKEN HERE")]
         public string Token { get; set; }
 
-        [JsonProperty(NullValueHandling = NullValueHandling.Include)]
+        [DefaultValue(false)]
         public bool RequireAccept { get; set; }
 
-        [JsonProperty(NullValueHandling = NullValueHandling.Include)]
+        [DefaultValue(false)]
         public bool EnableMessageScanner { get; set; }
 
-        [JsonProperty(NullValueHandling = NullValueHandling.Include)]
+        [DefaultValue("!")]
+        public string CommandPrefix { get; set; }
+
         public List<string> WelcomeMessages { get; set; }
 
-        [JsonProperty(NullValueHandling = NullValueHandling.Include)]
         public List<string> GameStatusMessages { get; set; }
-
-        public void Save()
-        {
-            lock (this)
-            {
-                File.WriteAllText(Path.Combine(Application.Current.Directory, "settings.json"), JsonConvert.SerializeObject(this, Formatting.Indented));
-            }
-        }
     }
 }

@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
+using TylorsTech.SimpleJsonSettings;
 
 namespace TRUCSBot
 {
@@ -27,52 +29,61 @@ namespace TRUCSBot
         private System.Timers.Timer statusTimer;
         private System.Timers.Timer muteTimer;
         private List<DiscordGame> gameList;
-        private int displayed_game = 0;
+        private int displayedGame = 0;
 
         public Dictionary<string, int> Warnings { get; private set; }
         public Dictionary<ulong, Tuple<ulong, DateTime>> Mutes { get; set; }
+
+        private IServiceProvider _serviceProvider;
+        private ILogger _logger;
+
+        internal void ConfigureServices(IServiceCollection serviceCollection)
+        {
+            serviceCollection
+                .AddLogging(builder => {
+                     builder.AddConsole();
+                     builder.AddSystemdConsole();
+                 });
+
+            _serviceProvider = serviceCollection.BuildServiceProvider();
+            _logger = _serviceProvider.GetRequiredService<ILogger<Program>>();
+        }
 
         public async void OnStartup(string[] args)
         {
             new ArgumentException(); //to fix a bug
 
-            Console.WriteLine("Starting Project Cerulean...");
+
+            _logger.LogInformation("Starting the TRUSU CS Club Discord bot...");
 
             CheckArgs(args);
 
-            if (CreateLoadSettings() == -1)
+            Settings = StronglyTypedSettingsFileBuilder<ApplicationSettings>.FromFile(Environment.CurrentDirectory, "settings.json")
+                .WithDefaultNullValueHandling(NullValueHandling.Include)
+                .WithDefaultValueHandling(DefaultValueHandling.Populate)
+                .WithFileNotFoundBehavior(SettingsFileNotFoundBehavior.ReturnDefault)
+                .Build();
+
+            if (Settings.Token == "INSERT TOKEN HERE")
             {
+                //And then quit. EDIT YOUR SHIT OWNER!
+                _logger.LogError("You haven't set your token! You must edit settings.json and add your token before running the bot.");
+                Settings.Save();
                 Application.Current.Shutdown();
                 return;
             }
 
-            if (Settings.Token == "INSERT TOKEN HERE")
-            {
-                Console.WriteLine(
-                    "You haven't set your token! You must edit settings.json and add your token before running the bot.");
-                Console.WriteLine("Press Ctrl-C to continue...");
-                return;
-            }
+            var token = Debugger.IsAttached && !string.IsNullOrEmpty(Settings.DebugToken) ? Settings.DebugToken : Settings.Token;
 
-            if (Debugger.IsAttached && !string.IsNullOrEmpty(Settings.DebugToken))
+            Discord = new DiscordClient(new DiscordConfiguration()
             {
-                Discord = new DiscordClient(new DiscordConfiguration()
-                {
-                    AutoReconnect = true,
-                    Token = Settings.DebugToken,
-                    TokenType = TokenType.Bot
-                });
-                Console.WriteLine("IN DEBUG MODE");
-            }
-            else
-                Discord = new DiscordClient(new DiscordConfiguration()
-                {
-                    AutoReconnect = true,
-                    Token = Settings.Token,
-                    TokenType = TokenType.Bot
-                });
+                AutoReconnect = true,
+                Token = token,
+                TokenType = TokenType.Bot
+            });
 
-            DiscordCommands = Discord.UseCommandsNext(new CommandsNextConfiguration() { CaseSensitive = true, StringPrefix = "!", EnableDms = true });
+            DiscordCommands = Discord.UseCommandsNext(new CommandsNextConfiguration() { CaseSensitive = true, StringPrefix = Settings.CommandPrefix, EnableDms = true });
+
             DiscordCommands.RegisterCommands<Commands.AdministrativeCommands>();
             DiscordCommands.RegisterCommands<Commands.AnnouncementCommands>();
             DiscordCommands.RegisterCommands<Commands.BoardCommands>();
@@ -86,10 +97,10 @@ namespace TRUCSBot
             if (Settings.RequireAccept)
                 DiscordCommands.RegisterCommands<Commands.WelcomeCommands>();
 
-            Console.WriteLine("Loading warnings...");
+            _logger.LogInformation("Loading warnings...");
             LoadWarnings();
 
-            Console.WriteLine("Loading mutes...");
+            _logger.LogInformation("Loading mutes...");
             LoadMutes();
 
             if (Settings.EnableMessageScanner)
@@ -102,11 +113,11 @@ namespace TRUCSBot
             }
 
             SetupDiscordEvents();
-            Console.WriteLine("Connecting to Discord...");
+            _logger.LogInformation("Connecting to Discord...");
             await Discord.ConnectAsync();
-            Console.WriteLine("Connected to Discord.");
+            _logger.LogInformation("Connected to Discord.");
 
-            Console.WriteLine("Load complete. Bot is now running.");
+            _logger.LogInformation("Load complete. Bot is now running.");
         }
 
         public void StartMuteTimer()
@@ -134,38 +145,6 @@ namespace TRUCSBot
             }
         }
 
-        /// <summary>
-        /// Attempts to load a settings file, and if it succeeds returns 0. If it fails, returns -1.
-        /// </summary>
-        /// <returns></returns>
-        private int CreateLoadSettings()
-        {
-            if (File.Exists(Path.Combine(Application.Current.Directory, "settings.json")))
-            {
-                Settings = JsonConvert.DeserializeObject<ApplicationSettings>(File.ReadAllText(Path.Combine(Application.Current.Directory, "settings.json")));
-                return 0;
-            }
-            //Generate new one!
-            Settings = GenerateNewSettingsFile();
-
-            //save
-            Settings.Save();
-            //And then quit. EDIT YOUR SHIT OWNER!
-            Console.WriteLine("No settings file found. One has been generated; edit it before you run the bot again!");
-            Console.WriteLine("Press Ctrl-C to continue...");
-            Console.ReadLine();
-            return -1;
-        }
-
-        private ApplicationSettings GenerateNewSettingsFile()
-        {
-            var m = new ApplicationSettings()
-            {
-                Token = "INSERT TOKEN HERE"
-            };
-            return m;
-        }
-
         private void CheckArgs(string[] args)
         {
             foreach (var arg in args)
@@ -174,7 +153,7 @@ namespace TRUCSBot
                 {
                     case "--dontscan":
                     case "-d":
-                        Console.WriteLine("Word scanner disabled.");
+                        _logger.LogInformation("Word scanner disabled based on command line argument.");
                         Settings.EnableMessageScanner = false;
                         break;
 
@@ -186,12 +165,13 @@ namespace TRUCSBot
                         return;
 
                     default:
-                        Console.WriteLine("Unknown command line switch: " + arg, LogLevel.Error);
+                        _logger.LogError("Unknown command line switch: " + arg);
                         Application.Current.Shutdown();
                         return;
                 }
             }
         }
+
         private void LoadWarnings()
         {
             var filename = Path.Combine(Application.Current.Directory, "warnings.json");
@@ -238,6 +218,12 @@ namespace TRUCSBot
             DiscordCommands.CommandErrored += DiscordCommands_CommandErrored;
             Discord.GuildMemberAdded += Discord_GuildMemberAdded;
             Discord.GuildMemberRemoved += Discord_GuildMemberRemoved;
+            Discord.ClientErrored += Discord_ClientErrored;
+        }
+
+        private async Task Discord_ClientErrored(DSharpPlus.EventArgs.ClientErrorEventArgs e)
+        {
+            _logger.LogError("Discord client errored", e);
         }
 
         private async Task Discord_GuildMemberRemoved(DSharpPlus.EventArgs.GuildMemberRemoveEventArgs e)
@@ -262,7 +248,7 @@ namespace TRUCSBot
 
         private async Task DiscordCommands_CommandErrored(CommandErrorEventArgs e)
         {
-            Console.WriteLine($"Error in command: {e.Exception.Message}\n{e.Exception.StackTrace}", LogLevel.Error);
+            _logger.LogError($"Error in Discord command", e);
             await Task.CompletedTask;
         }
 
@@ -297,12 +283,12 @@ namespace TRUCSBot
 
         private async void StatusTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            displayed_game++;
-            if (displayed_game >= gameList.Count)
+            displayedGame++;
+            if (displayedGame >= gameList.Count)
             {
-                displayed_game = 0;
+                displayedGame = 0;
             }
-            await Discord.UpdateStatusAsync(gameList[displayed_game]);
+            await Discord.UpdateStatusAsync(gameList[displayedGame]);
         }
 
         public void AddWarning(string usersMention)
