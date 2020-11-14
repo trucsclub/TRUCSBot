@@ -10,7 +10,7 @@ using DSharpPlus.CommandsNext.Attributes;
 
 namespace TRUCSBot.Commands
 {
-    public class AnnouncementCommands
+    public class AnnouncementCommands : BaseCommandModule
     {
         [Command("queue"), Description("Queue an announcement"), RequirePermissions(DSharpPlus.Permissions.MentionEveryone)]
         public async Task QueueAnnouncement(CommandContext ctx,
@@ -43,7 +43,7 @@ namespace TRUCSBot.Commands
             if (actualDate <= DateTime.Now.AddSeconds(5))
             {
                 //post now
-                await ctx.Guild.Channels.First(x => x.Name == "announcements").SendMessageAsync(message);
+                await ctx.Guild.Channels.First(x => x.Value.Name == "announcements").Value.SendMessageAsync(message);
             }
             else
             {
@@ -52,7 +52,7 @@ namespace TRUCSBot.Commands
                 Application.Current.AnnouncementTimers.Add(timer);
                 timer.Elapsed += async (s, e) =>
                 {
-                    await ctx.Guild.Channels.First(x => x.Name == "announcements").SendMessageAsync(message);
+                    await ctx.Guild.Channels.First(x => x.Value.Name == "announcements").Value.SendMessageAsync(message);
                     Application.Current.AnnouncementTimers.Remove((Timer)s);
                     ((Timer)s).Stop();
                 };

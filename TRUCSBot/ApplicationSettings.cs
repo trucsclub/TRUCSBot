@@ -31,5 +31,8 @@ namespace TRUCSBot
         public List<string> WelcomeMessages { get; set; }
 
         public List<string> GameStatusMessages { get; set; }
+
+        [DefaultValue(15000)]
+        public int ActivityMessageUpdateInterval { get; set; }
     }
 }

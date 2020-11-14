@@ -13,11 +13,19 @@ using DSharpPlus.Entities;
 using IGDB;
 using IGDB.Models;
 
+using Microsoft.Extensions.Logging;
 
 namespace TRUCSBot.Commands
 {
-    public class GameNightSuggestionCommands
+    public class GameNightSuggestionCommands : BaseCommandModule
     {
+        private ILogger _logger;
+
+        public GameNightSuggestionCommands(ILogger logger)
+        {
+            _logger = logger;
+        }
+
         [Command("suggestgame")]
         public async Task AddToBoard(CommandContext ctx, [Description("The title of the game you want to suggest")] [RemainingText] string title)
         {
@@ -60,7 +68,7 @@ namespace TRUCSBot.Commands
             catch (Exception ex) when (!Debugger.IsAttached)
             {
                 await ctx.RespondAsync("An error occurred: " + ex.Message);
-                Console.Error.WriteLine("Error occurred getting game night suggestion embed data: " + ex.Message + "\n" + ex.StackTrace);
+                _logger.LogError("Error occurred getting game night suggestion embed data", ex);
                 return;
             }
 
@@ -75,7 +83,7 @@ namespace TRUCSBot.Commands
             catch (Exception ex) when (!Debugger.IsAttached)
             {
                 await ctx.RespondAsync("An error occurred: " + ex.Message);
-                Console.Error.WriteLine("Error occurred posting game suggestion message: " + ex.Message + "\n" + ex.StackTrace);
+                _logger.LogError("Error occurred posting game suggestion message", ex);
             }
         }
     }

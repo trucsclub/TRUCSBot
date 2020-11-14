@@ -8,11 +8,20 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 
+using Microsoft.Extensions.Logging;
+
 namespace TRUCSBot.Commands
 {
     [Description("Administrative Commands")]
-    public class AdministrativeCommands
+    public class AdministrativeCommands : BaseCommandModule
     {
+        private readonly ILogger _logger;
+
+        public AdministrativeCommands(ILogger logger)
+        {
+            _logger = logger;
+        }
+
         [RequirePermissions(Permissions.ManageMessages)]
         [Command("trim"), Aliases("purge")]
         public async Task Trim(CommandContext ctx, int numOfMessages)
@@ -33,7 +42,7 @@ namespace TRUCSBot.Commands
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error while purging messages: " + ex.Message, LogLevel.Error);
+                _logger.LogError("Error while purging messages", ex);
             }
         }
 
@@ -43,7 +52,10 @@ namespace TRUCSBot.Commands
             try
             {
                 // let's change the nickname, and tell the audit logs who did it.
-                await member.ModifyAsync(newNick, reason: $"Changed by {ctx.User.Username} ({ctx.User.Id}).");
+                await member.ModifyAsync(x => {
+                        x.AuditLogReason = $"Changed by {ctx.User.Mention} ({ctx.User.Id}).";
+                        x.Nickname = newNick;
+                    });
                 //tell the channel as well
                 await ctx.RespondAsync("Changed nick.");
             }
@@ -67,7 +79,7 @@ namespace TRUCSBot.Commands
                     await ctx.Guild.BanMemberAsync(member,
                         reason: "Given last warning by " + ctx.Member.Username + ": " + reason);
 
-                    await (await Application.Current.Discord.CreateDmAsync(member)).SendMessageAsync(
+                    await member.SendMessageAsync(
                         "You have received too many warnings. Enjoy your ban.\n\nTo appeal this ban, contact a member of the TRU CS Club Board.");
                 }
                 else
@@ -109,7 +121,7 @@ namespace TRUCSBot.Commands
             catch (Exception ex)
             {
                 await ctx.RespondAsync("Couldn't complete action: " + ex.Message);
-                Console.WriteLine("Couldn't complete Ban action: " + ex.Message, LogLevel.Error);
+                _logger.LogError("Couldn't complete Ban action", ex);
             }
         }
 

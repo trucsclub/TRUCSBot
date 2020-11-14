@@ -8,7 +8,7 @@ using DSharpPlus.CommandsNext.Attributes;
 
 namespace TRUCSBot.Commands
 {
-    public class InteractionCommands
+    public class InteractionCommands : BaseCommandModule
     {
         [Command("echo"), Description("Makes the bot echo something back to you")]
         public async Task Echo(CommandContext ctx, [RemainingText] string content)

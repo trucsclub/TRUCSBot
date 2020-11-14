@@ -21,15 +21,15 @@ namespace TRUCSBot
     public partial class Application
     {
         public DiscordClient Discord { get; private set; }
-        public CommandsNextModule DiscordCommands { get; private set; }
+        public CommandsNextExtension DiscordCommands { get; private set; }
         public MessageScanner MessageScanner { get; private set; }
         public ApplicationSettings Settings { get; private set; }
         public List<System.Timers.Timer> AnnouncementTimers { get; } = new List<System.Timers.Timer>();
 
         private System.Timers.Timer statusTimer;
         private System.Timers.Timer muteTimer;
-        private List<DiscordGame> gameList;
-        private int displayedGame = 0;
+        private List<DiscordActivity> activityList;
+        private int displayedActivity = 0;
 
         public Dictionary<string, int> Warnings { get; private set; }
         public Dictionary<ulong, Tuple<ulong, DateTime>> Mutes { get; set; }
@@ -82,7 +82,7 @@ namespace TRUCSBot
                 TokenType = TokenType.Bot
             });
 
-            DiscordCommands = Discord.UseCommandsNext(new CommandsNextConfiguration() { CaseSensitive = true, StringPrefix = Settings.CommandPrefix, EnableDms = true });
+            DiscordCommands = Discord.UseCommandsNext(new CommandsNextConfiguration() { CaseSensitive = true, StringPrefixes = new[] { Settings.CommandPrefix }, EnableDms = true });
 
             DiscordCommands.RegisterCommands<Commands.AdministrativeCommands>();
             DiscordCommands.RegisterCommands<Commands.AnnouncementCommands>();
@@ -104,7 +104,7 @@ namespace TRUCSBot
             LoadMutes();
 
             if (Settings.EnableMessageScanner)
-                MessageScanner = new MessageScanner(Path.Combine(Application.Current.Directory, "flaggedwords.json"));
+                MessageScanner = new MessageScanner(_serviceProvider.GetService<ILogger<MessageScanner>>(), Path.Combine(Application.Current.Directory, "flaggedwords.json"));
 
             if (Settings.GameStatusMessages == null)
             {
@@ -140,7 +140,7 @@ namespace TRUCSBot
                 {
                     Mutes.Remove(f.Key);
                     var guild = Discord.Guilds[f.Value.Item1];
-                    await guild.RevokeRoleAsync(await guild.GetMemberAsync(f.Key), guild.Roles.First(x => x.Name == "Muted"), "Mute finished.");
+                    await (await guild.GetMemberAsync(f.Key)).RevokeRoleAsync(guild.Roles.First(x => x.Value.Name == "Muted").Value, "Mute finished.");                    
                 }
             }
         }
@@ -221,59 +221,60 @@ namespace TRUCSBot
             Discord.ClientErrored += Discord_ClientErrored;
         }
 
-        private async Task Discord_ClientErrored(DSharpPlus.EventArgs.ClientErrorEventArgs e)
+        private async Task Discord_ClientErrored(DiscordClient sender, DSharpPlus.EventArgs.ClientErrorEventArgs e)
         {
             _logger.LogError("Discord client errored", e);
         }
 
-        private async Task Discord_GuildMemberRemoved(DSharpPlus.EventArgs.GuildMemberRemoveEventArgs e)
+        private async Task Discord_GuildMemberRemoved(DiscordClient sender, DSharpPlus.EventArgs.GuildMemberRemoveEventArgs e)
         {
-            await e.Guild.Channels.First(x => x.Name == "general").SendMessageAsync(e.Member.Mention + " has left the building.");
+            await e.Guild.Channels.First(x => x.Value.Name == "general").Value.SendMessageAsync(e.Member.Mention + " has left the building.");
             await Task.CompletedTask;
         }
 
-        private async Task Discord_GuildMemberAdded(DSharpPlus.EventArgs.GuildMemberAddEventArgs e)
+        private async Task Discord_GuildMemberAdded(DiscordClient sender, DSharpPlus.EventArgs.GuildMemberAddEventArgs e)
         {
             if (!Settings.RequireAccept)
             {
-                await e.Guild.Channels.First(x => x.Name == "general")
+                await e.Guild.Channels.First(x => x.Value.Name == "general").Value
                     .SendMessageAsync(Settings.WelcomeMessages.Random().Replace("{NICK}", e.Member.Mention));
             }
         }
 
-        private async Task Discord_MessageUpdated(DSharpPlus.EventArgs.MessageUpdateEventArgs e)
+        private async Task Discord_MessageUpdated(DiscordClient sender, DSharpPlus.EventArgs.MessageUpdateEventArgs e)
         {
             await ScanMessageForLanguage(e.Message, e.Guild, e.Author);
         }
 
-        private async Task DiscordCommands_CommandErrored(CommandErrorEventArgs e)
+        private async Task DiscordCommands_CommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
         {
             _logger.LogError($"Error in Discord command", e);
             await Task.CompletedTask;
         }
 
-        private async Task Discord_MessageCreated(DSharpPlus.EventArgs.MessageCreateEventArgs e)
+        private async Task Discord_MessageCreated(DiscordClient sender, DSharpPlus.EventArgs.MessageCreateEventArgs e)
         {
             await ScanMessageForLanguage(e.Message, e.Guild, e.Author);
         }
 
-        private async Task Discord_Ready(DSharpPlus.EventArgs.ReadyEventArgs e)
+        private async Task Discord_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
         {
-            Console.WriteLine("Discord is ready. Yay!");
+            _logger.LogInformation("Discord is ready. Yay!");
             //await Discord.UpdateStatusAsync(new DiscordGame(Settings.GameStatusMessages[0]));
 
             if (Settings.GameStatusMessages.Count > 1)
             {
-                gameList = new List<DiscordGame>();
+                activityList = new List<DiscordActivity>();
                 foreach (var f in Settings.GameStatusMessages)
                 {
-                    gameList.Add(new DiscordGame(f));
+                    activityList.Add(new DiscordActivity(f, ActivityType.Custom));
                 }
-                Console.WriteLine(gameList.Count + " status messages loaded.");
+                
+                _logger.LogInformation(activityList.Count + " status messages loaded.");
 
                 statusTimer = new System.Timers.Timer()
                 {
-                    Interval = 15000
+                    Interval = Settings.ActivityMessageUpdateInterval
                 };
                 statusTimer.Elapsed += StatusTimer_Elapsed;
                 statusTimer.Start();
@@ -283,12 +284,12 @@ namespace TRUCSBot
 
         private async void StatusTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            displayedGame++;
-            if (displayedGame >= gameList.Count)
+            displayedActivity++;
+            if (displayedActivity >= activityList.Count)
             {
-                displayedGame = 0;
+                displayedActivity = 0;
             }
-            await Discord.UpdateStatusAsync(gameList[displayedGame]);
+            await Discord.UpdateStatusAsync(activityList[displayedActivity]);
         }
 
         public void AddWarning(string usersMention)
@@ -327,7 +328,7 @@ namespace TRUCSBot
                     await guild.BanMemberAsync((DiscordMember)author,
                         reason: $"Innapropriate language in message: {message.Content}");
 
-                    await (await Discord.CreateDmAsync(author)).SendMessageAsync(
+                    await ((DiscordMember)author).SendMessageAsync(
                         "Your language has been deemed unacceptable and you have been warned multiple times. Enjoy your ban.\n\nTo appeal this ban, contact a moderator.");
                 }
                 else

@@ -5,6 +5,8 @@ using System.Text;
 
 using DSharpPlus;
 
+using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
 
 namespace TRUCSBot
@@ -15,19 +17,22 @@ namespace TRUCSBot
 
         private string _filename;
 
-        public MessageScanner(string flagWordFile)
+        private ILogger _logger;
+
+        public MessageScanner(ILogger logger, string flagWordFile)
         {
+            _logger = logger;
             _filename = flagWordFile;
+
             if (File.Exists(flagWordFile))
             {
-                Console.WriteLine("Found flag words config file. Reading...");
+                _logger.LogInformation("Found flag words config file. Reading...");
                 FlagWords = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(flagWordFile));
             }
             if (FlagWords == null)
                 FlagWords = new List<string>();
 
-            Console.WriteLine($"Found {FlagWords.Count} flagged words.");
-
+            _logger.LogInformation($"Found {FlagWords.Count} flagged words.");
         }
 
         public bool ScanMessage(string message)
@@ -55,7 +60,7 @@ namespace TRUCSBot
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error saving flag words: " + ex.Message, LogLevel.Error);
+                _logger.LogError("Error saving flag words", ex);
             }
         }
     }
