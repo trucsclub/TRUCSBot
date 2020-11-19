@@ -22,17 +22,12 @@ namespace TRUCSBot
     {
         public DiscordClient Discord { get; private set; }
         public CommandsNextExtension DiscordCommands { get; private set; }
-        public MessageScanner MessageScanner { get; private set; }
         public ApplicationSettings Settings { get; private set; }
         public List<System.Timers.Timer> AnnouncementTimers { get; } = new List<System.Timers.Timer>();
 
         private System.Timers.Timer statusTimer;
-        private System.Timers.Timer muteTimer;
-        private List<DiscordActivity> activityList;
+        private readonly List<DiscordActivity> activityList = new List<DiscordActivity>();
         private int displayedActivity = 0;
-
-        public Dictionary<string, int> Warnings { get; private set; }
-        public Dictionary<ulong, Tuple<ulong, DateTime>> Mutes { get; set; }
 
         private IServiceProvider _serviceProvider;
         private ILogger _logger;
@@ -53,8 +48,8 @@ namespace TRUCSBot
         {
             new ArgumentException(); //to fix a bug
 
-
             _logger.LogInformation("Starting the TRUSU CS Club Discord bot...");
+            _logger.LogInformation($"Runtime directory: {Environment.CurrentDirectory}");
 
             CheckArgs(args);
 
@@ -62,6 +57,7 @@ namespace TRUCSBot
                 .WithDefaultNullValueHandling(NullValueHandling.Include)
                 .WithDefaultValueHandling(DefaultValueHandling.Populate)
                 .WithFileNotFoundBehavior(SettingsFileNotFoundBehavior.ReturnDefault)
+                .WithEncoding(System.Text.Encoding.UTF8)
                 .Build();
 
             if (Settings.Token == "INSERT TOKEN HERE")
@@ -91,25 +87,29 @@ namespace TRUCSBot
             DiscordCommands.RegisterCommands<Commands.GameNightSuggestionCommands>();
             DiscordCommands.RegisterCommands<Commands.InteractionCommands>();
 
-            if (Settings.EnableMessageScanner)
-                DiscordCommands.RegisterCommands<Commands.MessageScannerCommands>();
-
             if (Settings.RequireAccept)
                 DiscordCommands.RegisterCommands<Commands.WelcomeCommands>();
 
-            _logger.LogInformation("Loading warnings...");
-            LoadWarnings();
-
-            _logger.LogInformation("Loading mutes...");
-            LoadMutes();
-
-            if (Settings.EnableMessageScanner)
-                MessageScanner = new MessageScanner(_serviceProvider.GetService<ILogger<MessageScanner>>(), Path.Combine(Application.Current.Directory, "flaggedwords.json"));
-
             if (Settings.GameStatusMessages == null)
             {
-                Settings.GameStatusMessages = new List<string> { "use !help for more info." };
+                _logger.LogInformation("No game status messages were found in Settings.");
+                Settings.GameStatusMessages = new List<string> { $"Use {Settings.CommandPrefix}help for more info." };
                 Settings.Save();
+            }
+
+            activityList.Clear(); // just in case, for whatever reason it has items
+            foreach (var message in Settings.GameStatusMessages)
+            {
+                activityList.Add(new DiscordActivity(message, ActivityType.Custom));
+            }
+
+            _logger.LogInformation(activityList.Count + " status message(s) loaded.");
+
+            if (Settings.WelcomeMessages.Count <= 0)
+            {
+                Settings.WelcomeMessages.Add("Welcome {NICK}!");
+                Settings.Save();
+                _logger.LogInformation("No welcome messages found in settings; set default.");
             }
 
             SetupDiscordEvents();
@@ -120,43 +120,12 @@ namespace TRUCSBot
             _logger.LogInformation("Load complete. Bot is now running.");
         }
 
-        public void StartMuteTimer()
-        {
-            if (muteTimer == null || muteTimer.Enabled == false)
-            {
-                muteTimer = new System.Timers.Timer();
-                muteTimer.Interval = 500;
-                muteTimer.Elapsed += MuteTimer_Elapsed;
-                muteTimer.Start();
-            }
-        }
-
-        private async void MuteTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            for (int i = 0; i < Mutes.Count; i++)
-            {
-                var f = Mutes.ElementAt(i);
-                if (f.Value.Item2 < DateTime.Now)
-                {
-                    Mutes.Remove(f.Key);
-                    var guild = Discord.Guilds[f.Value.Item1];
-                    await (await guild.GetMemberAsync(f.Key)).RevokeRoleAsync(guild.Roles.First(x => x.Value.Name == "Muted").Value, "Mute finished.");                    
-                }
-            }
-        }
-
         private void CheckArgs(string[] args)
         {
             foreach (var arg in args)
             {
                 switch (arg)
                 {
-                    case "--dontscan":
-                    case "-d":
-                        _logger.LogInformation("Word scanner disabled based on command line argument.");
-                        Settings.EnableMessageScanner = false;
-                        break;
-
                     case "--help":
                         Console.WriteLine("COMMANDS");
                         Console.WriteLine("--dontscan, -d\t\tDont' scan for flagged words");
@@ -170,44 +139,6 @@ namespace TRUCSBot
                         return;
                 }
             }
-        }
-
-        private void LoadWarnings()
-        {
-            var filename = Path.Combine(Application.Current.Directory, "warnings.json");
-            if (File.Exists(filename))
-            {
-                Warnings = JsonConvert.DeserializeObject<Dictionary<string, int>>(File.ReadAllText(filename));
-            }
-            else
-            {
-                Warnings = new Dictionary<string, int>();
-            }
-        }
-
-        public void SaveWarnings()
-        {
-            var filename = Path.Combine(Application.Current.Directory, "warnings.json");
-            File.WriteAllText(filename, JsonConvert.SerializeObject(Warnings, Formatting.Indented));
-        }
-
-        private void LoadMutes()
-        {
-            var filename = Path.Combine(Application.Current.Directory, "mutes.json");
-            if (File.Exists(filename))
-            {
-                Mutes = JsonConvert.DeserializeObject<Dictionary<ulong, Tuple<ulong, DateTime>>>(File.ReadAllText(filename));
-            }
-            else
-            {
-                Mutes = new Dictionary<ulong, Tuple<ulong, DateTime>>();
-            }
-        }
-
-        private void SaveMutes()
-        {
-            var filename = Path.Combine(Application.Current.Directory, "mutes.json");
-            File.WriteAllText(filename, JsonConvert.SerializeObject(Mutes, Formatting.Indented));
         }
 
         private void SetupDiscordEvents()
@@ -244,7 +175,6 @@ namespace TRUCSBot
 
         private async Task Discord_MessageUpdated(DiscordClient sender, DSharpPlus.EventArgs.MessageUpdateEventArgs e)
         {
-            await ScanMessageForLanguage(e.Message, e.Guild, e.Author);
         }
 
         private async Task DiscordCommands_CommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
@@ -255,33 +185,38 @@ namespace TRUCSBot
 
         private async Task Discord_MessageCreated(DiscordClient sender, DSharpPlus.EventArgs.MessageCreateEventArgs e)
         {
-            await ScanMessageForLanguage(e.Message, e.Guild, e.Author);
         }
 
         private async Task Discord_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
         {
             _logger.LogInformation("Discord is ready. Yay!");
-            //await Discord.UpdateStatusAsync(new DiscordGame(Settings.GameStatusMessages[0]));
 
             if (Settings.GameStatusMessages.Count > 1)
             {
-                activityList = new List<DiscordActivity>();
-                foreach (var f in Settings.GameStatusMessages)
+                if (statusTimer == null)
                 {
-                    activityList.Add(new DiscordActivity(f, ActivityType.Custom));
+                    statusTimer = new System.Timers.Timer()
+                    {
+                        Interval = Settings.ActivityMessageUpdateInterval
+                    };
+                    statusTimer.Elapsed += StatusTimer_Elapsed;
+                    statusTimer.AutoReset = true;
+                    statusTimer.Start();
                 }
-                
-                _logger.LogInformation(activityList.Count + " status messages loaded.");
-
-                statusTimer = new System.Timers.Timer()
+                else
                 {
-                    Interval = Settings.ActivityMessageUpdateInterval
-                };
-                statusTimer.Elapsed += StatusTimer_Elapsed;
-                statusTimer.Start();
+                    statusTimer.Start();
+                }
             }
-
-            await Task.CompletedTask;
+            else if (Settings.GameStatusMessages.Count == 1)
+            {
+                _logger.LogInformation("Only one activity message exists; setting it.");
+                await Discord.UpdateStatusAsync(activityList[0]);
+            }
+            else
+            {
+                _logger.LogWarning("No activity messages exist; not setting one.");
+            }
         }
 
         private async void StatusTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -294,56 +229,8 @@ namespace TRUCSBot
             await Discord.UpdateStatusAsync(activityList[displayedActivity]);
         }
 
-        public void AddWarning(string usersMention)
-        {
-            if (Warnings.ContainsKey(usersMention))
-                Warnings[usersMention]++;
-            else
-                Warnings.Add(usersMention, 1);
-            SaveWarnings();
-        }
-
-        public void AddMute(ulong userID, int timeInMinutes, DiscordGuild guild)
-        {
-            if (!Mutes.ContainsKey(userID))
-                Mutes.Add(userID, new Tuple<ulong, DateTime>(guild.Id, DateTime.Now.AddMinutes(timeInMinutes)));
-            SaveMutes();
-            StartMuteTimer();
-        }
-
-        public bool CheckForBan(string usersMention)
-        {
-            return Warnings[usersMention] >= 3;
-        }
-
-        private async Task ScanMessageForLanguage(DiscordMessage message, DiscordGuild guild, DiscordUser author)
-        {
-            if (!Settings.EnableMessageScanner || message.Author.IsBot) return;
-
-            if (MessageScanner.ScanMessage(message.Content))
-            {
-                AddWarning(author.Mention);
-
-                if (CheckForBan(author.Mention))
-                {
-                    //BANHAMMER
-                    await guild.BanMemberAsync((DiscordMember)author,
-                        reason: $"Innapropriate language in message: {message.Content}");
-
-                    await ((DiscordMember)author).SendMessageAsync(
-                        "Your language has been deemed unacceptable and you have been warned multiple times. Enjoy your ban.\n\nTo appeal this ban, contact a moderator.");
-                }
-                else
-                {
-                    await message.RespondAsync($"{author.Mention}, your message has been removed for containing language deemed unacceptable in this channel. This is warning {Warnings[author.Mention]}. You only get three.");
-                }
-                await message.Channel.DeleteMessageAsync(message);
-            }
-        }
-
         public void OnShutdown()
         {
-            MessageScanner?.Save();
             Discord?.DisconnectAsync().Wait();
         }
     }

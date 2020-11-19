@@ -10,8 +10,7 @@ namespace TRUCSBot
 {
     public class ApplicationSettings : TylorsTech.SimpleJsonSettings.StronglyTypedSettingsDefinition
     {
-        //Stop class from being accidentally created
-        private ApplicationSettings() { }
+        public ApplicationSettings() { }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string DebugToken { get; set; }
@@ -21,9 +20,6 @@ namespace TRUCSBot
 
         [DefaultValue(false)]
         public bool RequireAccept { get; set; }
-
-        [DefaultValue(false)]
-        public bool EnableMessageScanner { get; set; }
 
         [DefaultValue("!")]
         public string CommandPrefix { get; set; }
