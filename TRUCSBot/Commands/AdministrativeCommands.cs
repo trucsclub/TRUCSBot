@@ -65,52 +65,6 @@ namespace TRUCSBot.Commands
             }
         }
 
-        [RequirePermissions(Permissions.BanMembers)]
-        [Command("warn"), Description("Warns someone about an infraction they've committed (like, a warning before a ban)")]
-        public async Task Warn(CommandContext ctx, DiscordMember member, [RemainingText, Description("The reason they are being warned")] string reason)
-        {
-            try
-            {
-                Application.Current.AddWarning(member.Mention);
-
-                if (Application.Current.CheckForBan(member.Mention))
-                {
-                    //BANHAMMER
-                    await ctx.Guild.BanMemberAsync(member,
-                        reason: "Given last warning by " + ctx.Member.Username + ": " + reason);
-
-                    await member.SendMessageAsync(
-                        "You have received too many warnings. Enjoy your ban.\n\nTo appeal this ban, contact a member of the TRU CS Club Board.");
-                }
-                else
-                {
-                    await ctx.RespondAsync("Issued warning.");
-                }
-            }
-            catch (Exception ex)
-            {
-                await ctx.RespondAsync("Error: " + ex.Message);
-            }
-        }
-
-        [Command("resetwarnings")]
-        [RequirePermissions(Permissions.BanMembers)]
-        [Description("Resets the number of warnings a user has been given.")]
-        public async Task ResetWarnings(CommandContext ctx, [Description("Member to reset warnings for.")] DiscordMember member)
-        {
-            try
-            {
-                Application.Current.Warnings.Remove(member.Mention);
-                Application.Current.SaveWarnings();
-
-                await ctx.RespondAsync("Reset warnings for user.");
-            }
-            catch (Exception ex)
-            {
-                await ctx.RespondAsync("Error: " + ex.Message);
-            }
-        }
-
         [Command("ban"), Description("Bans a user, regardless of how many warnings they've had"), RequirePermissions(Permissions.BanMembers)]
         public async Task Ban(CommandContext ctx, DiscordMember member, [RemainingText, Description("Reason for their ban.")] string reason)
         {
