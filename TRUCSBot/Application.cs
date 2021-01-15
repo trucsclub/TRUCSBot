@@ -32,6 +32,9 @@ namespace TRUCSBot
         private IServiceProvider _serviceProvider;
         private ILogger _logger;
 
+        /// <summary>
+        /// Configure services for Dependency Injection.
+        /// </summary>
         internal void ConfigureServices(IServiceCollection serviceCollection)
         {
             serviceCollection
@@ -46,8 +49,6 @@ namespace TRUCSBot
 
         public async void OnStartup(string[] args)
         {
-            new ArgumentException(); //to fix a bug
-
             _logger.LogInformation("Starting the TRUSU CS Club Discord bot...");
             _logger.LogInformation($"Runtime directory: {Environment.CurrentDirectory}");
 
@@ -100,7 +101,7 @@ namespace TRUCSBot
             activityList.Clear(); // just in case, for whatever reason it has items
             foreach (var message in Settings.GameStatusMessages)
             {
-                activityList.Add(new DiscordActivity(message, ActivityType.Custom));
+                activityList.Add(new DiscordActivity(message)); // custom isn't supported on bots :(
             }
 
             _logger.LogInformation(activityList.Count + " status message(s) loaded.");
@@ -144,12 +145,11 @@ namespace TRUCSBot
         private void SetupDiscordEvents()
         {
             Discord.Ready += Discord_Ready;
-            Discord.MessageCreated += Discord_MessageCreated;
-            Discord.MessageUpdated += Discord_MessageUpdated;
             DiscordCommands.CommandErrored += DiscordCommands_CommandErrored;
             Discord.GuildMemberAdded += Discord_GuildMemberAdded;
             Discord.GuildMemberRemoved += Discord_GuildMemberRemoved;
             Discord.ClientErrored += Discord_ClientErrored;
+            Discord.Resumed += Discord_Resumed;
         }
 
         private async Task Discord_ClientErrored(DiscordClient sender, DSharpPlus.EventArgs.ClientErrorEventArgs e)
@@ -173,18 +173,10 @@ namespace TRUCSBot
             }
         }
 
-        private async Task Discord_MessageUpdated(DiscordClient sender, DSharpPlus.EventArgs.MessageUpdateEventArgs e)
-        {
-        }
-
         private async Task DiscordCommands_CommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
         {
             _logger.LogError($"Error in Discord command", e);
             await Task.CompletedTask;
-        }
-
-        private async Task Discord_MessageCreated(DiscordClient sender, DSharpPlus.EventArgs.MessageCreateEventArgs e)
-        {
         }
 
         private async Task Discord_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
@@ -197,16 +189,14 @@ namespace TRUCSBot
                 {
                     statusTimer = new System.Timers.Timer()
                     {
-                        Interval = Settings.ActivityMessageUpdateInterval
+                        Interval = Settings.ActivityMessageUpdateInterval,
+                        AutoReset = true
                     };
+
                     statusTimer.Elapsed += StatusTimer_Elapsed;
-                    statusTimer.AutoReset = true;
-                    statusTimer.Start();
                 }
-                else
-                {
-                    statusTimer.Start();
-                }
+
+                statusTimer.Start();
             }
             else if (Settings.GameStatusMessages.Count == 1)
             {
@@ -216,6 +206,15 @@ namespace TRUCSBot
             else
             {
                 _logger.LogWarning("No activity messages exist; not setting one.");
+            }
+        }
+
+        private async Task Discord_Resumed(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
+        {
+            if (Settings.GameStatusMessages.Count == 1)
+            {
+                _logger.LogInformation("Only one activity message exists; setting it.");
+                await Discord.UpdateStatusAsync(activityList[0]);
             }
         }
 
