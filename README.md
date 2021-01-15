@@ -14,6 +14,10 @@ Build it like any other .NET Core project :)
 
 You need to edit your settings file with your own Discord API key.
 
+### Getting a Discord API Key
+
+To get a Discord API key, you need to create an application on [Discord's Developer Portal](https://discord.com/developers/applications).
+
 ## Pushing to our server (Club only)
 
 Run publish.bat and copy those files over
