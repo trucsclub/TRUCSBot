@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 using DSharpPlus.CommandsNext;
@@ -29,7 +26,7 @@ namespace TRUCSBot.Commands
         [Command("suggestgame")]
         public async Task AddToBoard(CommandContext ctx, [Description("The title of the game you want to suggest")] [RemainingText] string title)
         {
-            var igdb = new IGDBClient("m6gfkurncg92ogg7a9gelvhvgfi2ji", "0eroahpwh9c6thv6lcl8efzfotbirt"); //TODO: move outside
+            var igdb = new IGDBClient("m6gfkurncg92ogg7a9gelvhvgfi2ji", "0eroahpwh9c6thv6lcl8efzfotbirt"); // TODO: move outside
 
             var embed = new DiscordEmbedBuilder()
             {
@@ -46,14 +43,20 @@ namespace TRUCSBot.Commands
                     embed.Description = string.IsNullOrEmpty(game.Summary) ? "No information is available for this title" : game.Summary;
                     embed.Color = DiscordColor.Green;
                     embed.Url = game.Url;
+
                     var imgUrl = game.Cover?.Value.Url;
+
                     if (imgUrl.StartsWith("//"))
+                    {
                         imgUrl = "https:" + imgUrl;
+                    }
+
                     embed.ImageUrl = imgUrl;
                     if (game.InvolvedCompanies?.Values.Length > 0)
                     {
                         embed.AddField("Created by", string.Join(", ", game.InvolvedCompanies.Values.Select(x => x.Company.Value.Name)));
                     }
+
                     if (game.Platforms?.Values.Length > 0)
                     {
                         embed.AddField("Platforms", string.Join(", ", game.Platforms.Values.Select(x => x.Name)));
@@ -72,10 +75,9 @@ namespace TRUCSBot.Commands
                 return;
             }
 
-
             try
             {
-                var message = await ctx.Message.Channel.Guild.GetChannel(Debugger.IsAttached? 691903205545607201ul : 766406856050343996ul).SendMessageAsync(embed: embed);
+                var message = await ctx.Message.Channel.Guild.GetChannel(Debugger.IsAttached ? 691903205545607201ul : 766406856050343996ul).SendMessageAsync(embed: embed);
                 await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":thumbsup:"));
                 await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":thumbsdown:"));
                 await message.CreateReactionAsync(DiscordEmoji.FromUnicode(ctx.Client, "💰"));

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -20,17 +19,18 @@ namespace TRUCSBot
 {
     public partial class Application
     {
+        private readonly List<DiscordActivity> _activityList = new List<DiscordActivity>();
+
+        private System.Timers.Timer _statusTimer;
+        private int _displayedActivity = 0;
+
+        private IServiceProvider _serviceProvider;
+        private ILogger _logger;
+
         public DiscordClient Discord { get; private set; }
         public CommandsNextExtension DiscordCommands { get; private set; }
         public ApplicationSettings Settings { get; private set; }
         public List<System.Timers.Timer> AnnouncementTimers { get; } = new List<System.Timers.Timer>();
-
-        private System.Timers.Timer statusTimer;
-        private readonly List<DiscordActivity> activityList = new List<DiscordActivity>();
-        private int displayedActivity = 0;
-
-        private IServiceProvider _serviceProvider;
-        private ILogger _logger;
 
         /// <summary>
         /// Configure services for Dependency Injection.
@@ -38,10 +38,11 @@ namespace TRUCSBot
         internal void ConfigureServices(IServiceCollection serviceCollection)
         {
             serviceCollection
-                .AddLogging(builder => {
+                .AddLogging(builder =>
+                {
                      builder.AddConsole();
                      builder.AddSystemdConsole();
-                 });
+                });
 
             _serviceProvider = serviceCollection.BuildServiceProvider();
             _logger = _serviceProvider.GetRequiredService<ILogger<Program>>();
@@ -63,7 +64,7 @@ namespace TRUCSBot
 
             if (Settings.Token == "INSERT TOKEN HERE")
             {
-                //And then quit. EDIT YOUR SHIT OWNER!
+                // And then quit. EDIT YOUR SHIT OWNER!
                 _logger.LogError("You haven't set your token! You must edit settings.json and add your token before running the bot.");
                 Settings.Save();
                 Application.Current.Shutdown();
@@ -89,7 +90,9 @@ namespace TRUCSBot
             DiscordCommands.RegisterCommands<Commands.InteractionCommands>();
 
             if (Settings.RequireAccept)
+            {
                 DiscordCommands.RegisterCommands<Commands.WelcomeCommands>();
+            }
 
             if (Settings.GameStatusMessages == null)
             {
@@ -98,13 +101,13 @@ namespace TRUCSBot
                 Settings.Save();
             }
 
-            activityList.Clear(); // just in case, for whatever reason it has items
+            _activityList.Clear(); // just in case, for whatever reason it has items
             foreach (var message in Settings.GameStatusMessages)
             {
-                activityList.Add(new DiscordActivity(message)); // custom isn't supported on bots :(
+                _activityList.Add(new DiscordActivity(message)); // custom isn't supported on bots :(
             }
 
-            _logger.LogInformation(activityList.Count + " status message(s) loaded.");
+            _logger.LogInformation(_activityList.Count + " status message(s) loaded.");
 
             if (Settings.WelcomeMessages.Count <= 0)
             {
@@ -185,23 +188,23 @@ namespace TRUCSBot
 
             if (Settings.GameStatusMessages.Count > 1)
             {
-                if (statusTimer == null)
+                if (_statusTimer == null)
                 {
-                    statusTimer = new System.Timers.Timer()
+                    _statusTimer = new System.Timers.Timer()
                     {
                         Interval = Settings.ActivityMessageUpdateInterval,
                         AutoReset = true
                     };
 
-                    statusTimer.Elapsed += StatusTimer_Elapsed;
+                    _statusTimer.Elapsed += StatusTimer_Elapsed;
                 }
 
-                statusTimer.Start();
+                _statusTimer.Start();
             }
             else if (Settings.GameStatusMessages.Count == 1)
             {
                 _logger.LogInformation("Only one activity message exists; setting it.");
-                await Discord.UpdateStatusAsync(activityList[0]);
+                await Discord.UpdateStatusAsync(_activityList[0]);
             }
             else
             {
@@ -214,18 +217,20 @@ namespace TRUCSBot
             if (Settings.GameStatusMessages.Count == 1)
             {
                 _logger.LogInformation("Only one activity message exists; setting it.");
-                await Discord.UpdateStatusAsync(activityList[0]);
+                await Discord.UpdateStatusAsync(_activityList[0]);
             }
         }
 
         private async void StatusTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            displayedActivity++;
-            if (displayedActivity >= activityList.Count)
+            _displayedActivity++;
+
+            if (_displayedActivity >= _activityList.Count)
             {
-                displayedActivity = 0;
+                _displayedActivity = 0;
             }
-            await Discord.UpdateStatusAsync(activityList[displayedActivity]);
+
+            await Discord.UpdateStatusAsync(_activityList[_displayedActivity]);
         }
 
         public void OnShutdown()

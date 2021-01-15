@@ -18,6 +18,10 @@ You need to edit your settings file with your own Discord API key.
 
 To get a Discord API key, you need to create an application on [Discord's Developer Portal](https://discord.com/developers/applications).
 
+### Getting the bot to join your test server
+
+On the app page on Discord's Developer Portal, copy your bots client ID. Then go to ``https://discordapp.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&scope=bot&permissions=0``, where ``YOUR_CLIENT_ID`` is your client ID. Then, select the server you want to join and press authorize. 
+
 ## Pushing to our server (Club only)
 
 Run publish.bat and copy those files over

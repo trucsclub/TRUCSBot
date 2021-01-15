@@ -10,7 +10,8 @@ namespace TRUCSBot.Commands
 {
     public class BotCommands : BaseCommandModule
     {
-        [Command("about"), Description("Find out info about the bot")]
+        [Command("about")]
+        [Description("Find out info about the bot")]
         public async Task About(CommandContext ctx)
         {
             await ctx.RespondAsync(

@@ -1,20 +1,5 @@
-﻿/*
- * 
- * 
- * You probably don't need to be editing this file. You should be editing Application.cs
- * 
- * 
- */
-
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TRUCSBot
 {
@@ -24,11 +9,15 @@ namespace TRUCSBot
         public static bool IsShuttingDown = false;
         public event EventHandler ShutdownCompleted;
 
-        public string Directory => System.IO.Directory.GetParent(Assembly.GetEntryAssembly().Location).FullName;
+        public static string Directory => System.IO.Directory.GetParent(Assembly.GetEntryAssembly().Location).FullName;
 
         public Application()
         {
-            if (Current != null) throw new Exception("Cannot create a second Application class!");
+            if (Current != null)
+            {
+                throw new Exception("Cannot create a second Application class!");
+            }
+
             Current = this;
         }
 

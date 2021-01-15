@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using System.Threading.Tasks;
 
 using DSharpPlus.CommandsNext;
@@ -18,13 +15,13 @@ namespace TRUCSBot.Commands
         {
             if (ctx.Member.Roles.Any(x => x.Name == "Member"))
             {
-                //already a member
+                // already a member
                 await ctx.Member.SendMessageAsync("You're already a member!");
                 return;
             }
 
-            //add group to the Members group
-            await ctx.Member.GrantRoleAsync(ctx.Guild.Roles.First(x => x.Value.Name == "Member").Value); //note: this must be changed if we update the title
+            // add group to the Members group
+            await ctx.Member.GrantRoleAsync(ctx.Guild.Roles.First(x => x.Value.Name == "Member").Value); // note: this must be changed if we update the title
             await ctx.Message.DeleteAsync();
             await ctx.Guild.Channels.First(x => x.Value.Name == "general").Value
                 .SendMessageAsync(Application.Current.Settings.WelcomeMessages.Random().Replace("{NICK}", ctx.Member.Mention));

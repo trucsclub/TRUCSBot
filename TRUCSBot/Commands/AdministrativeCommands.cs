@@ -23,7 +23,8 @@ namespace TRUCSBot.Commands
         }
 
         [RequirePermissions(Permissions.ManageMessages)]
-        [Command("trim"), Aliases("purge")]
+        [Command("trim")]
+        [Aliases("purge")]
         public async Task Trim(CommandContext ctx, int numOfMessages)
         {
             try
@@ -34,7 +35,7 @@ namespace TRUCSBot.Commands
                     return;
                 }
 
-                var messages = await ctx.Channel.GetMessagesAsync(numOfMessages + 1); //add one for the command message
+                var messages = await ctx.Channel.GetMessagesAsync(numOfMessages + 1); // add one for the command message
                 foreach (var f in messages)
                 {
                     await ctx.Channel.DeleteMessageAsync(f);
@@ -46,17 +47,20 @@ namespace TRUCSBot.Commands
             }
         }
 
-        [Command("nick"), Description("Gives someone a new nickname."), RequirePermissions(Permissions.ManageNicknames)]
+        [Command("nick")]
+        [Description("Gives someone a new nickname.")]
+        [RequirePermissions(Permissions.ManageNicknames)]
         public async Task ChangeNickname(CommandContext ctx, [Description("Member to change the nickname for.")] DiscordMember member, [RemainingText, Description("The nickname to give to that user.")] string newNick)
         {
             try
             {
                 // let's change the nickname, and tell the audit logs who did it.
-                await member.ModifyAsync(x => {
-                        x.AuditLogReason = $"Changed by {ctx.User.Mention} ({ctx.User.Id}).";
-                        x.Nickname = newNick;
-                    });
-                //tell the channel as well
+                await member.ModifyAsync(x =>
+                {
+                    x.AuditLogReason = $"Changed by {ctx.User.Mention} ({ctx.User.Id}).";
+                    x.Nickname = newNick;
+                });
+                // tell the channel as well
                 await ctx.RespondAsync("Changed nick.");
             }
             catch (Exception ex)
@@ -65,7 +69,9 @@ namespace TRUCSBot.Commands
             }
         }
 
-        [Command("ban"), Description("Bans a user, regardless of how many warnings they've had"), RequirePermissions(Permissions.BanMembers)]
+        [Command("ban")]
+        [Description("Bans a user, regardless of how many warnings they've had")]
+        [RequirePermissions(Permissions.BanMembers)]
         public async Task Ban(CommandContext ctx, DiscordMember member, [RemainingText, Description("Reason for their ban.")] string reason)
         {
             try

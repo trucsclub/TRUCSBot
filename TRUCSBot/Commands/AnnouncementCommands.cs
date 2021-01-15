@@ -12,7 +12,9 @@ namespace TRUCSBot.Commands
 {
     public class AnnouncementCommands : BaseCommandModule
     {
-        [Command("queue"), Description("Queue an announcement"), RequirePermissions(DSharpPlus.Permissions.MentionEveryone)]
+        [Command("queue")]
+        [Description("Queue an announcement")]
+        [RequirePermissions(DSharpPlus.Permissions.MentionEveryone)]
         public async Task QueueAnnouncement(CommandContext ctx,
             [Description("Date to send")] string date,
             [Description("The time to send at")] string time,
@@ -22,19 +24,30 @@ namespace TRUCSBot.Commands
 
             var res = DateTime.TryParse(date, out DateTime d);
             if (!res)
+            {
                 d = new DateTime();
+            }
 
             if (date.ToLower() == "today")
+            {
                 d = DateTime.Now;
+            }
+
             if (date.ToLower() == "tomorrow")
+            {
                 d = DateTime.Now.AddDays(1);
+            }
 
             res = TimeSpan.TryParse(time, out TimeSpan t);
             if (!res)
+            {
                 t = new TimeSpan(8, 0, 0);
+            }
 
             if (time.ToLower() == "now")
+            {
                 t = DateTime.Now.TimeOfDay;
+            }
 
             var actualDate = new DateTime(d.Year, d.Month, d.Day, t.Hours, t.Minutes, t.Seconds);
 
@@ -42,7 +55,7 @@ namespace TRUCSBot.Commands
 
             if (actualDate <= DateTime.Now.AddSeconds(5))
             {
-                //post now
+                // post now
                 await ctx.Guild.Channels.First(x => x.Value.Name == "announcements").Value.SendMessageAsync(message);
             }
             else

@@ -10,7 +10,9 @@ namespace TRUCSBot
 {
     public class ApplicationSettings : TylorsTech.SimpleJsonSettings.StronglyTypedSettingsDefinition
     {
-        public ApplicationSettings() { }
+        public ApplicationSettings()
+        {
+        }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string DebugToken { get; set; }

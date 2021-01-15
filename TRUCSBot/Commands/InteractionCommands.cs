@@ -10,13 +10,15 @@ namespace TRUCSBot.Commands
 {
     public class InteractionCommands : BaseCommandModule
     {
-        [Command("echo"), Description("Makes the bot echo something back to you")]
+        [Command("echo")]
+        [Description("Makes the bot echo something back to you")]
         public async Task Echo(CommandContext ctx, [RemainingText] string content)
         {
             await ctx.RespondAsync(content, true);
         }
 
-        [Command("sucks"), Description("Responds with it's opinion about a programming language")]
+        [Command("sucks")]
+        [Description("Responds with it's opinion about a programming language")]
         public async Task Sucks(CommandContext ctx, [RemainingText, Description("The language that you think sucks")] string language)
         {
             if (language.Equals("C#", StringComparison.InvariantCultureIgnoreCase) || language.Equals("CSharp", StringComparison.InvariantCultureIgnoreCase))
@@ -30,7 +32,9 @@ namespace TRUCSBot.Commands
         }
 
         [Hidden]
-        [Command("navyseal"), Aliases("gorillawarfare"), Description("Output the navy seals copypasta")]
+        [Command("navyseal")]
+        [Aliases("gorillawarfare")]
+        [Description("Output the navy seals copypasta")]
         public async Task NavySeal(CommandContext ctx)
         {
             await ctx.TriggerTypingAsync();
