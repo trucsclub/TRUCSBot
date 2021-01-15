@@ -17,6 +17,7 @@ namespace TRUCSBot.Commands
     public class GameNightSuggestionCommands : BaseCommandModule
     {
         private ILogger _logger;
+        private IGDBClient _igdb = new IGDBClient("m6gfkurncg92ogg7a9gelvhvgfi2ji", "0eroahpwh9c6thv6lcl8efzfotbirt");
 
         public GameNightSuggestionCommands(ILogger<GameNightSuggestionCommands> logger)
         {
@@ -26,8 +27,6 @@ namespace TRUCSBot.Commands
         [Command("suggestgame")]
         public async Task AddToBoard(CommandContext ctx, [Description("The title of the game you want to suggest")] [RemainingText] string title)
         {
-            var igdb = new IGDBClient("m6gfkurncg92ogg7a9gelvhvgfi2ji", "0eroahpwh9c6thv6lcl8efzfotbirt"); // TODO: move outside
-
             var embed = new DiscordEmbedBuilder()
             {
                 Title = title,
@@ -36,17 +35,18 @@ namespace TRUCSBot.Commands
 
             try
             {
-                var games = await igdb.QueryAsync<Game>(IGDBClient.Endpoints.Games, $"search \"{title}\"; fields id,name,cover.*,involved_companies.company.name,platforms.name,summary,url;");
-                var game = games.OrderBy(x => x.Name).FirstOrDefault();
-                if (game != null)
+                var games = await _igdb.QueryAsync<Game>(IGDBClient.Endpoints.Games, $"search \"{title.Replace("\"", "\\\"")}\"; fields id,name,cover.*,involved_companies.company.name,platforms.name,summary,url,aggregated_rating;");
+                if (games.Length > 0)
                 {
+                    var game = games.OrderBy(x => LevenshteinDistance(title, x.Name)).ThenByDescending(x => x.AggregatedRating).First();
+                    embed.Title = game.Name;
                     embed.Description = string.IsNullOrEmpty(game.Summary) ? "No information is available for this title" : game.Summary;
                     embed.Color = DiscordColor.Green;
                     embed.Url = game.Url;
 
                     var imgUrl = game.Cover?.Value.Url;
 
-                    if (imgUrl.StartsWith("//"))
+                    if (imgUrl != null && imgUrl.StartsWith("//"))
                     {
                         imgUrl = "https:" + imgUrl;
                     }
@@ -87,6 +87,58 @@ namespace TRUCSBot.Commands
                 await ctx.RespondAsync("An error occurred: " + ex.Message);
                 _logger.LogError("Error occurred posting game suggestion message", ex);
             }
+        }
+
+        /// <summary>
+        /// The Levenshtein distance between two words is the minimum number of single-character edits (i.e. insertions,
+        /// deletions or substitutions) required to change one word into the other. It is named after Vladimir
+        /// Levenshtein.
+        /// </summary>
+        /// <remarks>Copied from https://www.csharpstar.com/csharp-string-distance-algorithm/.</remarks>
+        /// <returns>The Levenshtein distance from <paramref name="s"/> to <paramref name="t"/></returns>
+        private static int LevenshteinDistance(string s, string t)
+        {
+            int n = s.Length, m = t.Length;
+            var d = new int[n + 1, m + 1];
+
+            // Step 1
+            if (n == 0)
+            {
+                return m;
+            }
+
+            if (m == 0)
+            {
+                return n;
+            }
+
+            // Step 2
+            for (var i = 0; i <= n; d[i, 0] = i++)
+            {
+            }
+
+            for (var j = 0; j <= m; d[0, j] = j++)
+            {
+            }
+
+            // Step 3
+            for (var i = 1; i <= n; i++)
+            {
+                // Step 4
+                for (var j = 1; j <= m; j++)
+                {
+                    // Step 5
+                    var cost = (t[j - 1] == s[i - 1]) ? 0 : 1;
+
+                    // Step 6
+                    d[i, j] = Math.Min(
+                        Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
+                        d[i - 1, j - 1] + cost);
+                }
+            }
+
+            // Step 7
+            return d[n, m];
         }
     }
 }
