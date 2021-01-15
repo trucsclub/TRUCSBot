@@ -89,7 +89,13 @@ namespace TRUCSBot.Commands
             }
         }
 
-        // https://www.csharpstar.com/csharp-string-distance-algorithm/
+        /// <summary>
+        /// The Levenshtein distance between two words is the minimum number of single-character edits (i.e. insertions,
+        /// deletions or substitutions) required to change one word into the other. It is named after Vladimir
+        /// Levenshtein.
+        /// </summary>
+        /// <remarks>Copied from https://www.csharpstar.com/csharp-string-distance-algorithm/.</remarks>
+        /// <returns>The Levenshtein distance from <paramref name="s"/> to <paramref name="t"/></returns>
         private static int LevenshteinDistance(string s, string t)
         {
             int n = s.Length, m = t.Length;
