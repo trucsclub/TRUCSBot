@@ -25,7 +25,7 @@ namespace TRUCSBot.Commands
         }
 
         [Command("suggestgame")]
-        public async Task AddToBoard(CommandContext ctx, [Description("The title of the game you want to suggest")] [RemainingText] string title)
+        public async Task SuggestGame(CommandContext ctx, [Description("The title of the game you want to suggest")] [RemainingText] string title)
         {
             var embed = new DiscordEmbedBuilder()
             {
