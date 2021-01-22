@@ -14,7 +14,7 @@ namespace TRUCSBot.Commands
         [Description("Makes the bot echo something back to you")]
         public async Task Echo(CommandContext ctx, [RemainingText] string content)
         {
-            await ctx.RespondAsync(content, true);
+            await ctx.RespondAsync(content);
         }
 
         [Command("sucks")]
