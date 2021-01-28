@@ -46,5 +46,12 @@ namespace TRUCSBot.Commands
         {
             await ctx.RespondAsync($"There are {ctx.Guild.MemberCount} people on this server.");
         }
+
+        [Description("Posts the link to \"How To Ask Questions The Smart Way\"")]
+        [Command("question")]
+        public async Task Question(CommandContext ctx)
+        {
+            await ctx.RespondAsync("http://www.catb.org/~esr/faqs/smart-questions.html");
+        }
     }
 }
