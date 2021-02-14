@@ -32,5 +32,9 @@ namespace TRUCSBot
 
         [DefaultValue(15000)]
         public int ActivityMessageUpdateInterval { get; set; }
+
+        public string IGDBClientId { get; set; }
+
+        public string IGDBClientSecret { get; set; }
     }
 }
