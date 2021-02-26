@@ -38,7 +38,7 @@ namespace TRUCSBot.Commands
                 var games = await _igdb.QueryAsync<Game>(IGDBClient.Endpoints.Games, $"search \"{title.Replace("\"", "\\\"")}\"; fields id,name,cover.*,involved_companies.company.name,platforms.name,summary,url,aggregated_rating;");
                 if (games.Length > 0)
                 {
-                    var game = games.OrderBy(x => LevenshteinDistance(title, x.Name)).ThenByDescending(x => x.AggregatedRating).First();
+                    var game = games.OrderBy(x => LevenshteinDistance(title.ToLower(), x.Name.ToLower())).ThenByDescending(x => x.AggregatedRating).First();
                     embed.Title = game.Name;
                     embed.Description = string.IsNullOrEmpty(game.Summary) ? "No information is available for this title" : game.Summary;
                     embed.Color = DiscordColor.Green;
