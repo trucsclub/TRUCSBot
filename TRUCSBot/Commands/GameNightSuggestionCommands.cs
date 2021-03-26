@@ -17,7 +17,7 @@ namespace TRUCSBot.Commands
     public class GameNightSuggestionCommands : BaseCommandModule
     {
         private ILogger _logger;
-        private IGDBClient _igdb = new IGDBClient("m6gfkurncg92ogg7a9gelvhvgfi2ji", "0eroahpwh9c6thv6lcl8efzfotbirt");
+        private IGDBClient _igdb = new IGDBClient(Application.Current.Settings.IGDBClientId, Application.Current.Settings.IGDBClientSecret);
 
         public GameNightSuggestionCommands(ILogger<GameNightSuggestionCommands> logger)
         {
