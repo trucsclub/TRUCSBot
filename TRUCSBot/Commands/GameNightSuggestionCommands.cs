@@ -27,6 +27,12 @@ namespace TRUCSBot.Commands
         [Command("suggestgame")]
         public async Task SuggestGame(CommandContext ctx, [Description("The title of the game you want to suggest")] [RemainingText] string title)
         {
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                await ctx.RespondAsync("Oi fucktard, you need to specify a game when you use !suggestgame.");
+                return;
+            }
+
             var embed = new DiscordEmbedBuilder()
             {
                 Title = title,
