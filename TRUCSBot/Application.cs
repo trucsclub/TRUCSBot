@@ -31,6 +31,7 @@ namespace TRUCSBot
         public CommandsNextExtension DiscordCommands { get; private set; }
         public ApplicationSettings Settings { get; private set; }
         public List<System.Timers.Timer> AnnouncementTimers { get; } = new List<System.Timers.Timer>();
+        public RoleManager RoleManager { get; private set; }
 
         /// <summary>
         /// Configure services for Dependency Injection.
@@ -71,6 +72,8 @@ namespace TRUCSBot
                 return;
             }
 
+            RoleManager = new RoleManager();
+
             var token = Debugger.IsAttached && !string.IsNullOrEmpty(Settings.DebugToken) ? Settings.DebugToken : Settings.Token;
 
             Discord = new DiscordClient(new DiscordConfiguration()
@@ -88,6 +91,8 @@ namespace TRUCSBot
             DiscordCommands.RegisterCommands<Commands.BotCommands>();
             DiscordCommands.RegisterCommands<Commands.GameNightSuggestionCommands>();
             DiscordCommands.RegisterCommands<Commands.InteractionCommands>();
+            DiscordCommands.RegisterCommands<Commands.RoleCommands>();
+            DiscordCommands.RegisterCommands<Commands.TestCommands>();
 
             if (Settings.RequireAccept)
             {
@@ -153,6 +158,18 @@ namespace TRUCSBot
             Discord.GuildMemberRemoved += Discord_GuildMemberRemoved;
             Discord.ClientErrored += Discord_ClientErrored;
             Discord.Resumed += Discord_Resumed;
+            Discord.MessageReactionAdded += Discord_MessageReactionAdded;
+            Discord.MessageReactionRemoved += Discord_MessageReactionRemoved;
+        }
+
+        private Task Discord_MessageReactionRemoved(DiscordClient sender, DSharpPlus.EventArgs.MessageReactionRemoveEventArgs e)
+        {
+            return RoleManager.CheckReactionRemovedAsync(e);
+        }
+
+        private Task Discord_MessageReactionAdded(DiscordClient sender, DSharpPlus.EventArgs.MessageReactionAddEventArgs e)
+        {
+            return RoleManager.CheckReactionAddedAsync(e);
         }
 
         private async Task Discord_ClientErrored(DiscordClient sender, DSharpPlus.EventArgs.ClientErrorEventArgs e)

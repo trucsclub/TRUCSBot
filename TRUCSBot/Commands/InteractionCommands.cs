@@ -53,5 +53,13 @@ namespace TRUCSBot.Commands
         {
             await ctx.RespondAsync("http://www.catb.org/~esr/faqs/smart-questions.html");
         }
+
+        [Hidden]
+        [Command("friday")]
+        [Description("Prints a Friday video")]
+        public async Task Friday(CommandContext ctx)
+        {
+            await ctx.RespondAsync("https://www.youtube.com/watch?v=kfVsfOSbJY0");
+        }
     }
 }

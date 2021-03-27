@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Text;
 
+using DSharpPlus.Entities;
+
 using Newtonsoft.Json;
 
 namespace TRUCSBot
@@ -36,5 +38,35 @@ namespace TRUCSBot
         public string IGDBClientId { get; set; }
 
         public string IGDBClientSecret { get; set; }
+
+        public List<RoleCategorySettingsItem> ReactionRoles { get; set; } = new ();
+    }
+
+    public class RoleCategorySettingsItem
+    {
+        public string CategoryDescription { get; set; }
+        public ulong? DiscordMessageId { get; set; }
+        public List<RoleSettingsItem> Roles { get; set; }
+    }
+
+    public class RoleSettingsItem
+    {
+        public string ReactionEmoji { get; set; }
+        public string RoleName { get; set; }
+        public string RoleDescription { get; set; }
+
+        [JsonIgnore]
+        private DiscordEmoji _emoji = null;
+
+        [JsonIgnore]
+        public DiscordEmoji Emoji
+        {
+            get => _emoji ??= DiscordEmoji.FromName(Application.Current.Discord, ReactionEmoji);
+            set
+            {
+                _emoji = value;
+                ReactionEmoji = _emoji.Name;
+            }
+        }
     }
 }
