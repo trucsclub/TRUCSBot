@@ -11,5 +11,10 @@ namespace TRUCSBot
             var m = new Random().Next(0, list.Count - 1);
             return list[m];
         }
+
+        public static bool DayMonthIs(this DateTime date, int day, int month)
+        {
+            return date.Day == day && date.Month == month;
+        }
     }
 }

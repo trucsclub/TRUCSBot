@@ -93,6 +93,7 @@ namespace TRUCSBot
             DiscordCommands.RegisterCommands<Commands.InteractionCommands>();
             DiscordCommands.RegisterCommands<Commands.RoleCommands>();
             DiscordCommands.RegisterCommands<Commands.TestCommands>();
+            DiscordCommands.RegisterCommands<Commands.WednesdayCommands>();
 
             if (Settings.RequireAccept)
             {
