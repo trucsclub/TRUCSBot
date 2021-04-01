@@ -9,6 +9,9 @@ using DSharpPlus.EventArgs;
 
 namespace TRUCSBot
 {
+    /// <summary>
+    /// Manages current roles that are loaded from settings. Also handles sending the reaction messages to chat.
+    /// </summary>
     public class RoleManager
     {
         public RoleManager()

@@ -12,6 +12,9 @@ using Microsoft.Extensions.Logging;
 
 namespace TRUCSBot.Commands
 {
+    /// <summary>
+    /// This class handles administrative commands, that should require admin roles.
+    /// </summary>
     [Description("Administrative Commands")]
     public class AdministrativeCommands : BaseCommandModule
     {

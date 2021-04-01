@@ -17,20 +17,59 @@ using TylorsTech.SimpleJsonSettings;
 
 namespace TRUCSBot
 {
+    /// <summary>
+    /// Main application class.
+    /// </summary>
     public partial class Application
     {
+        /// <summary>
+        /// List of Discord Activities (the "Playing" messages) that we have loaded from settings.
+        /// </summary>
         private readonly List<DiscordActivity> _activityList = new List<DiscordActivity>();
 
+        /// <summary>
+        /// Timer in charge of updating the current Discord Activity
+        /// </summary>
         private System.Timers.Timer _statusTimer;
+
+        /// <summary>
+        /// Index of currently displayed Discord Activity
+        /// </summary>
         private int _displayedActivity = 0;
 
+        /// <summary>
+        /// The service provider used by Dependancy Injection
+        /// </summary>
         private IServiceProvider _serviceProvider;
+
+        /// <summary>
+        /// The current logger for this class
+        /// </summary>
         private ILogger _logger;
 
+        /// <summary>
+        /// The main application Discord client interface
+        /// </summary>
         public DiscordClient Discord { get; private set; }
+
+        /// <summary>
+        /// Master list of all of the current Discord Commands
+        /// </summary>
         public CommandsNextExtension DiscordCommands { get; private set; }
+
+        /// <summary>
+        /// Current application settings
+        /// </summary>
         public ApplicationSettings Settings { get; private set; }
+
+        /// <summary>
+        /// Current list of all timers for announcements.
+        /// </summary>
         public List<System.Timers.Timer> AnnouncementTimers { get; } = new List<System.Timers.Timer>();
+
+        /// <summary>
+        /// Current role manager.
+        /// </summary>
         public RoleManager RoleManager { get; private set; }
 
         /// <summary>
@@ -49,6 +88,10 @@ namespace TRUCSBot
             _logger = _serviceProvider.GetRequiredService<ILogger<Program>>();
         }
 
+        /// <summary>
+        /// Main application startup method
+        /// </summary>
+        /// <param name="args">List of command line arguments</param>
         public async void OnStartup(string[] args)
         {
             _logger.LogInformation("Starting the TRUSU CS Club Discord bot...");
@@ -200,6 +243,9 @@ namespace TRUCSBot
             await Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Called when Discord is initialized, connected, and ready for commands.
+        /// </summary>
         private async Task Discord_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
         {
             _logger.LogInformation("Discord is ready. Yay!");
@@ -239,6 +285,10 @@ namespace TRUCSBot
             }
         }
 
+        /// <summary>
+        /// Called when the <see cref="_statusTimer"/> event is fired.
+        /// This method should update the currently displayed DiscordActivity based on <see cref="_activityList"/>
+        /// </summary>
         private async void StatusTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             _displayedActivity++;
