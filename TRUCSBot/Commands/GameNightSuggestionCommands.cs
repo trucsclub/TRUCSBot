@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using DSharpPlus.CommandsNext;
@@ -41,7 +42,7 @@ namespace TRUCSBot.Commands
 
             try
             {
-                var games = await _igdb.QueryAsync<Game>(IGDBClient.Endpoints.Games, $"search \"{title.Replace("\"", "\\\"")}\"; fields id,name,cover.*,involved_companies.company.name,platforms.name,summary,url,aggregated_rating;");
+                var games = await _igdb.QueryAsync<Game>(IGDBClient.Endpoints.Games, $"search \"{Sanitize(title)}\"; fields id,name,cover.*,involved_companies.company.name,platforms.name,summary,url,aggregated_rating;");
                 if (games.Length > 0)
                 {
                     var game = games.OrderBy(x => LevenshteinDistance(title.ToLower(), x.Name.ToLower())).ThenByDescending(x => x.AggregatedRating).First();
@@ -93,6 +94,11 @@ namespace TRUCSBot.Commands
                 await ctx.RespondAsync("An error occurred: " + ex.Message);
                 _logger.LogError("Error occurred posting game suggestion message", ex);
             }
+        }
+
+        private static string Sanitize(string s)
+        {
+            return Regex.Replace(s, @"([""\\])", @"\$1");
         }
 
         /// <summary>
