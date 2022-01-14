@@ -6,6 +6,7 @@ using DSharpPlus.Entities;
 
 namespace TRUCSBot.Commands
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     public class TestCommands : BaseCommandModule
     {
         [Command("getemojiid")]

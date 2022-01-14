@@ -43,7 +43,7 @@ namespace TRUCSBot
         private ILogger _logger;
 
         /// <summary>
-        ///     The service provider used by Dependancy Injection
+        ///     The service provider used by Dependency Injection
         /// </summary>
         private IServiceProvider _serviceProvider;
 
@@ -70,6 +70,7 @@ namespace TRUCSBot
         /// <summary>
         ///     Current list of all timers for announcements.
         /// </summary>
+        // ReSharper disable once CollectionNeverQueried.Global
         public List<Timer> AnnouncementTimers { get; } = new();
 
         /// <summary>
@@ -97,10 +98,10 @@ namespace TRUCSBot
         ///     Main application startup method
         /// </summary>
         /// <param name="args">List of command line arguments</param>
-        public async void OnStartup(string[] args)
+        private async void OnStartup(string[] args)
         {
             _logger.LogInformation("Starting the TRUSU CS Club Discord bot...");
-            _logger.LogInformation($"Runtime directory: {Environment.CurrentDirectory}");
+            _logger.LogInformation("Runtime directory: {Directory}", Environment.CurrentDirectory);
 
             CheckArgs(args);
 
@@ -116,7 +117,7 @@ namespace TRUCSBot
             {
                 // And then quit. EDIT YOUR SHIT OWNER!
                 _logger.LogError(
-                    "You haven't set your token! You must edit settings.json and add your token before running the bot.");
+                    "You haven't set your token! You must edit settings.json and add your token before running the bot");
                 Settings.Save();
                 Current.Shutdown();
                 return;
@@ -158,7 +159,7 @@ namespace TRUCSBot
 
             if (Settings.GameStatusMessages == null)
             {
-                _logger.LogInformation("No game status messages were found in Settings.");
+                _logger.LogInformation("No game status messages were found in Settings");
                 Settings.GameStatusMessages = new List<string> { $"Use {Settings.CommandPrefix}help for more info." };
                 Settings.Save();
             }
@@ -169,21 +170,21 @@ namespace TRUCSBot
                 _activityList.Add(new DiscordActivity(message)); // custom isn't supported on bots :(
             }
 
-            _logger.LogInformation(_activityList.Count + " status message(s) loaded.");
+            _logger.LogInformation("{Count} status message(s) loaded", _activityList.Count);
 
             if (Settings.WelcomeMessages.Count <= 0)
             {
                 Settings.WelcomeMessages.Add("Welcome {NICK}!");
                 Settings.Save();
-                _logger.LogInformation("No welcome messages found in settings; set default.");
+                _logger.LogInformation("No welcome messages found in settings; set default");
             }
 
             SetupDiscordEvents();
-            _logger.LogInformation("Connecting to Discord...");
+            _logger.LogInformation("Connecting to Discord");
             await Discord.ConnectAsync();
-            _logger.LogInformation("Connected to Discord.");
+            _logger.LogInformation("Connected to Discord");
 
-            _logger.LogInformation("Load complete. Bot is now running.");
+            _logger.LogInformation("Load complete; bot is now running");
         }
 
         private void CheckArgs(string[] args)
@@ -194,13 +195,12 @@ namespace TRUCSBot
                 {
                     case "--help":
                         Console.WriteLine("COMMANDS");
-                        Console.WriteLine("--dontscan, -d\t\tDont' scan for flagged words");
                         Console.WriteLine("--help\t\tShow this help");
                         Current.Shutdown();
                         return;
 
                     default:
-                        _logger.LogError("Unknown command line switch: " + arg);
+                        _logger.LogError("Unknown command line switch: {Arg}", arg);
                         Current.Shutdown();
                         return;
                 }
@@ -231,7 +231,7 @@ namespace TRUCSBot
 
         private async Task Discord_ClientErrored(DiscordClient sender, ClientErrorEventArgs e)
         {
-            _logger.LogError("Discord client errored", e);
+            _logger.LogError(e.Exception, "Discord client errored: {}", e.EventName);
             await Task.CompletedTask;
         }
 
@@ -253,7 +253,8 @@ namespace TRUCSBot
 
         private async Task DiscordCommands_CommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
         {
-            _logger.LogError("Error in Discord command", e);
+            _logger.LogError(e.Exception, "Error in Discord command '{}' from message '{}'", e.Command.Name,
+                e.Context.Message.Content);
             await Task.CompletedTask;
         }
 
@@ -281,12 +282,12 @@ namespace TRUCSBot
             }
             else if (Settings.GameStatusMessages.Count == 1)
             {
-                _logger.LogInformation("Only one activity message exists; setting it.");
+                _logger.LogInformation("Only one activity message exists; setting it");
                 await Discord.UpdateStatusAsync(_activityList[0]);
             }
             else
             {
-                _logger.LogWarning("No activity messages exist; not setting one.");
+                _logger.LogWarning("No activity messages exist; not setting one");
             }
         }
 
@@ -294,7 +295,7 @@ namespace TRUCSBot
         {
             if (Settings.GameStatusMessages.Count == 1)
             {
-                _logger.LogInformation("Only one activity message exists; setting it.");
+                _logger.LogInformation("Only one activity message exists; setting it");
                 await Discord.UpdateStatusAsync(_activityList[0]);
             }
         }
@@ -315,7 +316,7 @@ namespace TRUCSBot
             await Discord.UpdateStatusAsync(_activityList[_displayedActivity]);
         }
 
-        public void OnShutdown()
+        private void OnShutdown()
         {
             Discord?.DisconnectAsync().Wait();
         }

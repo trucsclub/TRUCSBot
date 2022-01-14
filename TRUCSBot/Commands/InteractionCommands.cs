@@ -6,6 +6,7 @@ using DSharpPlus.CommandsNext.Attributes;
 
 namespace TRUCSBot.Commands
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     public class InteractionCommands : BaseCommandModule
     {
         [Command("echo")]

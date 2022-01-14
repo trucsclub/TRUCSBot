@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace TRUCSBot.Commands
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     public class BoardCommands : BaseCommandModule
     {
         private readonly ILogger _logger;
@@ -33,7 +34,7 @@ namespace TRUCSBot.Commands
             catch (Exception ex)
             {
                 await ctx.RespondAsync("Command failed.");
-                _logger.LogError("Error executing AddToBoard", ex);
+                _logger.LogError(ex, "Error executing AddToBoard");
             }
         }
     }

@@ -7,7 +7,7 @@ namespace TRUCSBot
 {
     internal class Program
     {
-        private static readonly ManualResetEvent _quitEvent = new(false);
+        private static readonly ManualResetEvent QuitEvent = new(false);
 
         private static void Main(string[] args)
         {
@@ -18,15 +18,15 @@ namespace TRUCSBot
 
             application.Run(args);
 
-            Application.Current.ShutdownCompleted += (s, e) => { _quitEvent.Set(); };
+            Application.Current.ShutdownCompleted += (_, _) => { QuitEvent.Set(); };
 
-            Console.CancelKeyPress += (s, e) =>
+            Console.CancelKeyPress += (_, e) =>
             {
                 e.Cancel = true;
                 application.Shutdown();
             };
 
-            _quitEvent.WaitOne();
+            QuitEvent.WaitOne();
         }
     }
 }

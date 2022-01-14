@@ -6,11 +6,15 @@ using DSharpPlus.CommandsNext.Attributes;
 
 namespace TRUCSBot.Commands
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     public class WednesdayCommands : BaseCommandModule
     {
-        private static readonly Random _random = new();
+        private const string HalloweenWednesday = "https://www.youtube.com/watch?v=pXv4zQ6dYPQ";
+        private const string ChristmasWednesday = "https://www.youtube.com/watch?v=1CH-7qjz4D4";
+        private const string ValentinesWednesday = "https://www.youtube.com/watch?v=_87k7gxeVsw";
+        private static readonly Random Random = new();
 
-        private static readonly string[] _normalWednesdays =
+        private static readonly string[] NormalWednesdays =
         {
             "https://www.youtube.com/watch?v=9K4-jllrPrE",
             "https://www.youtube.com/watch?v=bbat6cvgEJ8",
@@ -64,10 +68,6 @@ namespace TRUCSBot.Commands
             "https://www.youtube.com/watch?v=EaVowG5Y2DI"
         };
 
-        private static readonly string _halloweenWednesday = "https://www.youtube.com/watch?v=pXv4zQ6dYPQ";
-        private static readonly string _christmasWednesday = "https://www.youtube.com/watch?v=1CH-7qjz4D4";
-        private static readonly string _valentinesWednesday = "https://www.youtube.com/watch?v=_87k7gxeVsw";
-
         [Command("wednesday")]
         [Description("It's Wednesday my dudes")]
         public async Task Wednesday(CommandContext ctx)
@@ -76,25 +76,25 @@ namespace TRUCSBot.Commands
 
             if (DateTime.Now.DayMonthIs(25, 12)) // Christmas
             {
-                await ctx.Channel.SendMessageAsync(_christmasWednesday);
+                await ctx.Channel.SendMessageAsync(ChristmasWednesday);
                 return;
             }
 
             if (DateTime.Now.DayMonthIs(31, 10)) // Halloween
             {
-                await ctx.Channel.SendMessageAsync(_halloweenWednesday);
+                await ctx.Channel.SendMessageAsync(HalloweenWednesday);
                 return;
             }
 
             if (DateTime.Now.DayMonthIs(14, 2)) // Valentines Day
             {
-                await ctx.Channel.SendMessageAsync(_valentinesWednesday);
+                await ctx.Channel.SendMessageAsync(ValentinesWednesday);
                 return;
             }
 
             // Send a random normal one
-            var item = _random.Next(0, _normalWednesdays.Length);
-            await ctx.Channel.SendMessageAsync(_normalWednesdays[item]);
+            var item = Random.Next(0, NormalWednesdays.Length);
+            await ctx.Channel.SendMessageAsync(NormalWednesdays[item]);
         }
     }
 }

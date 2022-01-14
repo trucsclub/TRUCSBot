@@ -9,6 +9,7 @@ using DSharpPlus.CommandsNext.Attributes;
 
 namespace TRUCSBot.Commands
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     public class AnnouncementCommands : BaseCommandModule
     {
         [Command("queue")]
@@ -27,15 +28,12 @@ namespace TRUCSBot.Commands
                 d = new DateTime();
             }
 
-            if (date.ToLower() == "today")
+            d = date?.ToLower() switch
             {
-                d = DateTime.Now;
-            }
-
-            if (date.ToLower() == "tomorrow")
-            {
-                d = DateTime.Now.AddDays(1);
-            }
+                "today" => DateTime.Now,
+                "tomorrow" => DateTime.Now.AddDays(1),
+                _ => d
+            };
 
             res = TimeSpan.TryParse(time, out var t);
             if (!res)
@@ -43,10 +41,11 @@ namespace TRUCSBot.Commands
                 t = new TimeSpan(8, 0, 0);
             }
 
-            if (time.ToLower() == "now")
+            t = time?.ToLower() switch
             {
-                t = DateTime.Now.TimeOfDay;
-            }
+                "now" => DateTime.Now.TimeOfDay,
+                _ => t
+            };
 
             var actualDate = new DateTime(d.Year, d.Month, d.Day, t.Hours, t.Minutes, t.Seconds);
 
@@ -63,7 +62,7 @@ namespace TRUCSBot.Commands
                 var timer = new Timer();
                 timer.Interval = (actualDate - DateTime.Now).TotalMilliseconds;
                 Application.Current.AnnouncementTimers.Add(timer);
-                timer.Elapsed += async (s, e) =>
+                timer.Elapsed += async (s, _) =>
                 {
                     await ctx.Guild.Channels.First(x => x.Value.Name == "announcements").Value
                         .SendMessageAsync(message);

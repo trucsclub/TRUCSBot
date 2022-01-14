@@ -42,9 +42,9 @@ namespace TRUCSBot.Commands
                     await ctx.Channel.DeleteMessageAsync(f);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError("Error while purging messages", ex);
+                _logger.LogError("Error while purging messages");
             }
         }
 
@@ -85,7 +85,7 @@ namespace TRUCSBot.Commands
             catch (Exception ex)
             {
                 await ctx.RespondAsync("Couldn't complete action: " + ex.Message);
-                _logger.LogError("Couldn't complete Ban action", ex);
+                _logger.LogError("Couldn't complete Ban action");
             }
         }
     }

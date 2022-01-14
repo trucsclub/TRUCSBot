@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace TRUCSBot.Commands
 {
     [Description("Role Commands")]
+    // ReSharper disable once ClassNeverInstantiated.Global
     public class RoleCommands : BaseCommandModule
     {
         private readonly ILogger _logger;

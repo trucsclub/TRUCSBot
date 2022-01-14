@@ -5,6 +5,7 @@ using DSharpPlus.CommandsNext.Attributes;
 
 namespace TRUCSBot.Commands
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     public class BotCommands : BaseCommandModule
     {
         [Command("about")]
@@ -12,7 +13,7 @@ namespace TRUCSBot.Commands
         public async Task About(CommandContext ctx)
         {
             await ctx.RespondAsync(
-                "Dr. Java was created by Tylor Pater for the official TRU CS Club Discord channel. \nIt's written in C# and targets .NET 5.");
+                "Dr. Java was created by Tylor Pater for the official TRU CS Club Discord channel.\nIt's written in C# and targets .NET 5.");
         }
     }
 }

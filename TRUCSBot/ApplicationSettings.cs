@@ -30,11 +30,11 @@ namespace TRUCSBot
         [DefaultValue(15000)]
         public int ActivityMessageUpdateInterval { get; set; }
 
-        public string IGDBClientId { get; set; }
+        public string IgdbClientId { get; set; }
 
-        public string IGDBClientSecret { get; set; }
+        public string IgdbClientSecret { get; set; }
 
-        public List<RoleCategorySettingsItem> ReactionRoles { get; set; } = new();
+        public List<RoleCategorySettingsItem> ReactionRoles { get; } = new();
     }
 
     public class RoleCategorySettingsItem

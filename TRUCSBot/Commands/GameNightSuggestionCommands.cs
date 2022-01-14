@@ -15,10 +15,11 @@ using Microsoft.Extensions.Logging;
 
 namespace TRUCSBot.Commands
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     public class GameNightSuggestionCommands : BaseCommandModule
     {
-        private readonly IGDBClient _igdb = new(Application.Current.Settings.IGDBClientId,
-            Application.Current.Settings.IGDBClientSecret);
+        private readonly IGDBClient _igdb = new(Application.Current.Settings.IgdbClientId,
+            Application.Current.Settings.IgdbClientSecret);
 
         private readonly ILogger _logger;
 
@@ -85,7 +86,7 @@ namespace TRUCSBot.Commands
             catch (Exception ex) when (!Debugger.IsAttached)
             {
                 await ctx.RespondAsync("An error occurred: " + ex.Message);
-                _logger.LogError("Error occurred getting game night suggestion embed data", ex);
+                _logger.LogError(ex, "Error occurred getting game night suggestion embed data");
                 return;
             }
 
@@ -101,7 +102,7 @@ namespace TRUCSBot.Commands
             catch (Exception ex) when (!Debugger.IsAttached)
             {
                 await ctx.RespondAsync("An error occurred: " + ex.Message);
-                _logger.LogError("Error occurred posting game suggestion message", ex);
+                _logger.LogError(ex, "Error occurred posting game suggestion message");
             }
         }
 

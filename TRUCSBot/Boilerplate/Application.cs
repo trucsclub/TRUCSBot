@@ -5,8 +5,6 @@ namespace TRUCSBot
 {
     public partial class Application
     {
-        public static bool IsShuttingDown;
-
         public Application()
         {
             if (Current != null)
@@ -17,9 +15,13 @@ namespace TRUCSBot
             Current = this;
         }
 
+        public static bool IsShuttingDown { get; private set; }
+
         public static Application Current { get; private set; }
 
-        public static string Directory => System.IO.Directory.GetParent(Assembly.GetEntryAssembly().Location).FullName;
+        public static string Directory =>
+            System.IO.Directory.GetParent(Assembly.GetEntryAssembly()!.Location)!.FullName;
+
         public event EventHandler ShutdownCompleted;
 
         public void Run(string[] args)
