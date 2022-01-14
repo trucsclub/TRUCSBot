@@ -46,12 +46,12 @@ namespace TRUCSBot
 
     public class RoleSettingsItem
     {
+        [JsonIgnore]
+        private DiscordEmoji _emoji;
+
         public string ReactionEmoji { get; set; }
         public string RoleName { get; set; }
         public string RoleDescription { get; set; }
-
-        [JsonIgnore]
-        private DiscordEmoji _emoji;
 
         [JsonIgnore]
         public DiscordEmoji Emoji

@@ -17,10 +17,10 @@ namespace TRUCSBot.Commands
 {
     public class GameNightSuggestionCommands : BaseCommandModule
     {
-        private readonly ILogger _logger;
-
         private readonly IGDBClient _igdb = new(Application.Current.Settings.IGDBClientId,
             Application.Current.Settings.IGDBClientSecret);
+
+        private readonly ILogger _logger;
 
         public GameNightSuggestionCommands(ILogger<GameNightSuggestionCommands> logger)
         {

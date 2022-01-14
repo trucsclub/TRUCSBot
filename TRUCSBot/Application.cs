@@ -33,14 +33,14 @@ namespace TRUCSBot
         private readonly List<DiscordActivity> _activityList = new();
 
         /// <summary>
-        ///     Timer in charge of updating the current Discord Activity
-        /// </summary>
-        private Timer _statusTimer;
-
-        /// <summary>
         ///     Index of currently displayed Discord Activity
         /// </summary>
         private int _displayedActivity;
+
+        /// <summary>
+        ///     The current logger for this class
+        /// </summary>
+        private ILogger _logger;
 
         /// <summary>
         ///     The service provider used by Dependancy Injection
@@ -48,9 +48,9 @@ namespace TRUCSBot
         private IServiceProvider _serviceProvider;
 
         /// <summary>
-        ///     The current logger for this class
+        ///     Timer in charge of updating the current Discord Activity
         /// </summary>
-        private ILogger _logger;
+        private Timer _statusTimer;
 
         /// <summary>
         ///     The main application Discord client interface
