@@ -1,21 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using System.Text;
 
 using DSharpPlus.Entities;
 
 using Newtonsoft.Json;
 
+using TylorsTech.SimpleJsonSettings;
+
 namespace TRUCSBot
 {
-    public class ApplicationSettings : TylorsTech.SimpleJsonSettings.StronglyTypedSettingsDefinition
+    public class ApplicationSettings : StronglyTypedSettingsDefinition
     {
-        public ApplicationSettings()
-        {
-        }
-
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string DebugToken { get; set; }
 
@@ -39,7 +34,7 @@ namespace TRUCSBot
 
         public string IGDBClientSecret { get; set; }
 
-        public List<RoleCategorySettingsItem> ReactionRoles { get; set; } = new ();
+        public List<RoleCategorySettingsItem> ReactionRoles { get; set; } = new();
     }
 
     public class RoleCategorySettingsItem
@@ -56,7 +51,7 @@ namespace TRUCSBot
         public string RoleDescription { get; set; }
 
         [JsonIgnore]
-        private DiscordEmoji _emoji = null;
+        private DiscordEmoji _emoji;
 
         [JsonIgnore]
         public DiscordEmoji Emoji

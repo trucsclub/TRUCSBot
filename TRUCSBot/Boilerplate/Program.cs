@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Threading;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace TRUCSBot
 {
     internal class Program
     {
-        private static readonly ManualResetEvent _quitEvent = new ManualResetEvent(false);
+        private static readonly ManualResetEvent _quitEvent = new(false);
 
         private static void Main(string[] args)
         {
@@ -17,10 +18,7 @@ namespace TRUCSBot
 
             application.Run(args);
 
-            Application.Current.ShutdownCompleted += (s, e) =>
-            {
-                _quitEvent.Set();
-            };
+            Application.Current.ShutdownCompleted += (s, e) => { _quitEvent.Set(); };
 
             Console.CancelKeyPress += (s, e) =>
             {

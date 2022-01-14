@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
@@ -10,16 +10,12 @@ using DSharpPlus.EventArgs;
 namespace TRUCSBot
 {
     /// <summary>
-    /// Manages current roles that are loaded from settings. Also handles sending the reaction messages to chat.
+    ///     Manages current roles that are loaded from settings. Also handles sending the reaction messages to chat.
     /// </summary>
     public class RoleManager
     {
-        public RoleManager()
-        {
-        }
-
         /// <summary>
-        /// This method sends all of the reaction messages again, overwriting the ones stored in the settings.
+        ///     This method sends all of the reaction messages again, overwriting the ones stored in the settings.
         /// </summary>
         /// <param name="ctx">DSharpPlus context</param>
         public async Task SendMessagesAsync(CommandContext ctx)
@@ -57,7 +53,8 @@ namespace TRUCSBot
                 return;
             }
 
-            var roleCategory = Application.Current.Settings.ReactionRoles.FirstOrDefault(x => x.DiscordMessageId == e.Message.Id);
+            var roleCategory =
+                Application.Current.Settings.ReactionRoles.FirstOrDefault(x => x.DiscordMessageId == e.Message.Id);
             if (roleCategory == null)
             {
                 return;
@@ -83,7 +80,8 @@ namespace TRUCSBot
                 return;
             }
 
-            var roleCategory = Application.Current.Settings.ReactionRoles.FirstOrDefault(x => x.DiscordMessageId == e.Message.Id);
+            var roleCategory =
+                Application.Current.Settings.ReactionRoles.FirstOrDefault(x => x.DiscordMessageId == e.Message.Id);
             if (roleCategory == null)
             {
                 return;

@@ -2,86 +2,91 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
 
+using TRUCSBot.Commands;
+
 using TylorsTech.SimpleJsonSettings;
 
 namespace TRUCSBot
 {
     /// <summary>
-    /// Main application class.
+    ///     Main application class.
     /// </summary>
     public partial class Application
     {
         /// <summary>
-        /// List of Discord Activities (the "Playing" messages) that we have loaded from settings.
+        ///     List of Discord Activities (the "Playing" messages) that we have loaded from settings.
         /// </summary>
-        private readonly List<DiscordActivity> _activityList = new List<DiscordActivity>();
+        private readonly List<DiscordActivity> _activityList = new();
 
         /// <summary>
-        /// Timer in charge of updating the current Discord Activity
+        ///     Timer in charge of updating the current Discord Activity
         /// </summary>
-        private System.Timers.Timer _statusTimer;
+        private Timer _statusTimer;
 
         /// <summary>
-        /// Index of currently displayed Discord Activity
+        ///     Index of currently displayed Discord Activity
         /// </summary>
-        private int _displayedActivity = 0;
+        private int _displayedActivity;
 
         /// <summary>
-        /// The service provider used by Dependancy Injection
+        ///     The service provider used by Dependancy Injection
         /// </summary>
         private IServiceProvider _serviceProvider;
 
         /// <summary>
-        /// The current logger for this class
+        ///     The current logger for this class
         /// </summary>
         private ILogger _logger;
 
         /// <summary>
-        /// The main application Discord client interface
+        ///     The main application Discord client interface
         /// </summary>
         public DiscordClient Discord { get; private set; }
 
         /// <summary>
-        /// Master list of all of the current Discord Commands
+        ///     Master list of all of the current Discord Commands
         /// </summary>
         public CommandsNextExtension DiscordCommands { get; private set; }
 
         /// <summary>
-        /// Current application settings
+        ///     Current application settings
         /// </summary>
         public ApplicationSettings Settings { get; private set; }
 
         /// <summary>
-        /// Current list of all timers for announcements.
+        ///     Current list of all timers for announcements.
         /// </summary>
-        public List<System.Timers.Timer> AnnouncementTimers { get; } = new List<System.Timers.Timer>();
+        public List<Timer> AnnouncementTimers { get; } = new();
 
         /// <summary>
-        /// Current role manager.
+        ///     Current role manager.
         /// </summary>
         public RoleManager RoleManager { get; private set; }
 
         /// <summary>
-        /// Configure services for Dependency Injection.
+        ///     Configure services for Dependency Injection.
         /// </summary>
         internal void ConfigureServices(IServiceCollection serviceCollection)
         {
             serviceCollection
                 .AddLogging(builder =>
                 {
-                     builder.AddConsole();
-                     builder.AddSystemdConsole();
+                    builder.AddConsole();
+                    builder.AddSystemdConsole();
                 });
 
             _serviceProvider = serviceCollection.BuildServiceProvider();
@@ -89,7 +94,7 @@ namespace TRUCSBot
         }
 
         /// <summary>
-        /// Main application startup method
+        ///     Main application startup method
         /// </summary>
         /// <param name="args">List of command line arguments</param>
         public async void OnStartup(string[] args)
@@ -99,48 +104,56 @@ namespace TRUCSBot
 
             CheckArgs(args);
 
-            Settings = StronglyTypedSettingsFileBuilder<ApplicationSettings>.FromFile(Environment.CurrentDirectory, "settings.json")
+            Settings = StronglyTypedSettingsFileBuilder<ApplicationSettings>
+                .FromFile(Environment.CurrentDirectory, "settings.json")
                 .WithDefaultNullValueHandling(NullValueHandling.Include)
                 .WithDefaultValueHandling(DefaultValueHandling.Populate)
                 .WithFileNotFoundBehavior(SettingsFileNotFoundBehavior.ReturnDefault)
-                .WithEncoding(System.Text.Encoding.UTF8)
+                .WithEncoding(Encoding.UTF8)
                 .Build();
 
             if (Settings.Token == "INSERT TOKEN HERE")
             {
                 // And then quit. EDIT YOUR SHIT OWNER!
-                _logger.LogError("You haven't set your token! You must edit settings.json and add your token before running the bot.");
+                _logger.LogError(
+                    "You haven't set your token! You must edit settings.json and add your token before running the bot.");
                 Settings.Save();
-                Application.Current.Shutdown();
+                Current.Shutdown();
                 return;
             }
 
             RoleManager = new RoleManager();
 
-            var token = Debugger.IsAttached && !string.IsNullOrEmpty(Settings.DebugToken) ? Settings.DebugToken : Settings.Token;
+            var token = Debugger.IsAttached && !string.IsNullOrEmpty(Settings.DebugToken)
+                ? Settings.DebugToken
+                : Settings.Token;
 
-            Discord = new DiscordClient(new DiscordConfiguration()
+            Discord = new DiscordClient(new DiscordConfiguration
             {
                 AutoReconnect = true,
                 Token = token,
                 TokenType = TokenType.Bot
             });
 
-            DiscordCommands = Discord.UseCommandsNext(new CommandsNextConfiguration() { CaseSensitive = true, StringPrefixes = new[] { Settings.CommandPrefix }, EnableDms = true, Services = _serviceProvider });
+            DiscordCommands = Discord.UseCommandsNext(new CommandsNextConfiguration
+            {
+                CaseSensitive = true, StringPrefixes = new[] { Settings.CommandPrefix }, EnableDms = true,
+                Services = _serviceProvider
+            });
 
-            DiscordCommands.RegisterCommands<Commands.AdministrativeCommands>();
-            DiscordCommands.RegisterCommands<Commands.AnnouncementCommands>();
-            DiscordCommands.RegisterCommands<Commands.BoardCommands>();
-            DiscordCommands.RegisterCommands<Commands.BotCommands>();
-            DiscordCommands.RegisterCommands<Commands.GameNightSuggestionCommands>();
-            DiscordCommands.RegisterCommands<Commands.InteractionCommands>();
-            DiscordCommands.RegisterCommands<Commands.RoleCommands>();
-            DiscordCommands.RegisterCommands<Commands.TestCommands>();
-            DiscordCommands.RegisterCommands<Commands.WednesdayCommands>();
+            DiscordCommands.RegisterCommands<AdministrativeCommands>();
+            DiscordCommands.RegisterCommands<AnnouncementCommands>();
+            DiscordCommands.RegisterCommands<BoardCommands>();
+            DiscordCommands.RegisterCommands<BotCommands>();
+            DiscordCommands.RegisterCommands<GameNightSuggestionCommands>();
+            DiscordCommands.RegisterCommands<InteractionCommands>();
+            DiscordCommands.RegisterCommands<RoleCommands>();
+            DiscordCommands.RegisterCommands<TestCommands>();
+            DiscordCommands.RegisterCommands<WednesdayCommands>();
 
             if (Settings.RequireAccept)
             {
-                DiscordCommands.RegisterCommands<Commands.WelcomeCommands>();
+                DiscordCommands.RegisterCommands<WelcomeCommands>();
             }
 
             if (Settings.GameStatusMessages == null)
@@ -183,12 +196,12 @@ namespace TRUCSBot
                         Console.WriteLine("COMMANDS");
                         Console.WriteLine("--dontscan, -d\t\tDont' scan for flagged words");
                         Console.WriteLine("--help\t\tShow this help");
-                        Application.Current.Shutdown();
+                        Current.Shutdown();
                         return;
 
                     default:
                         _logger.LogError("Unknown command line switch: " + arg);
-                        Application.Current.Shutdown();
+                        Current.Shutdown();
                         return;
                 }
             }
@@ -206,29 +219,30 @@ namespace TRUCSBot
             Discord.MessageReactionRemoved += Discord_MessageReactionRemoved;
         }
 
-        private Task Discord_MessageReactionRemoved(DiscordClient sender, DSharpPlus.EventArgs.MessageReactionRemoveEventArgs e)
+        private Task Discord_MessageReactionRemoved(DiscordClient sender, MessageReactionRemoveEventArgs e)
         {
             return RoleManager.CheckReactionRemovedAsync(e);
         }
 
-        private Task Discord_MessageReactionAdded(DiscordClient sender, DSharpPlus.EventArgs.MessageReactionAddEventArgs e)
+        private Task Discord_MessageReactionAdded(DiscordClient sender, MessageReactionAddEventArgs e)
         {
             return RoleManager.CheckReactionAddedAsync(e);
         }
 
-        private async Task Discord_ClientErrored(DiscordClient sender, DSharpPlus.EventArgs.ClientErrorEventArgs e)
+        private async Task Discord_ClientErrored(DiscordClient sender, ClientErrorEventArgs e)
         {
             _logger.LogError("Discord client errored", e);
             await Task.CompletedTask;
         }
 
-        private async Task Discord_GuildMemberRemoved(DiscordClient sender, DSharpPlus.EventArgs.GuildMemberRemoveEventArgs e)
+        private async Task Discord_GuildMemberRemoved(DiscordClient sender, GuildMemberRemoveEventArgs e)
         {
-            await e.Guild.Channels.First(x => x.Value.Name == "general").Value.SendMessageAsync(e.Member.Mention + " has left the building.");
+            await e.Guild.Channels.First(x => x.Value.Name == "general").Value
+                .SendMessageAsync(e.Member.Mention + " has left the building.");
             await Task.CompletedTask;
         }
 
-        private async Task Discord_GuildMemberAdded(DiscordClient sender, DSharpPlus.EventArgs.GuildMemberAddEventArgs e)
+        private async Task Discord_GuildMemberAdded(DiscordClient sender, GuildMemberAddEventArgs e)
         {
             if (!Settings.RequireAccept)
             {
@@ -239,14 +253,14 @@ namespace TRUCSBot
 
         private async Task DiscordCommands_CommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
         {
-            _logger.LogError($"Error in Discord command", e);
+            _logger.LogError("Error in Discord command", e);
             await Task.CompletedTask;
         }
 
         /// <summary>
-        /// Called when Discord is initialized, connected, and ready for commands.
+        ///     Called when Discord is initialized, connected, and ready for commands.
         /// </summary>
-        private async Task Discord_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
+        private async Task Discord_Ready(DiscordClient sender, ReadyEventArgs e)
         {
             _logger.LogInformation("Discord is ready. Yay!");
 
@@ -254,7 +268,7 @@ namespace TRUCSBot
             {
                 if (_statusTimer == null)
                 {
-                    _statusTimer = new System.Timers.Timer()
+                    _statusTimer = new Timer
                     {
                         Interval = Settings.ActivityMessageUpdateInterval,
                         AutoReset = true
@@ -276,7 +290,7 @@ namespace TRUCSBot
             }
         }
 
-        private async Task Discord_Resumed(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
+        private async Task Discord_Resumed(DiscordClient sender, ReadyEventArgs e)
         {
             if (Settings.GameStatusMessages.Count == 1)
             {
@@ -286,10 +300,10 @@ namespace TRUCSBot
         }
 
         /// <summary>
-        /// Called when the <see cref="_statusTimer"/> event is fired.
-        /// This method should update the currently displayed DiscordActivity based on <see cref="_activityList"/>
+        ///     Called when the <see cref="_statusTimer" /> event is fired.
+        ///     This method should update the currently displayed DiscordActivity based on <see cref="_activityList" />
         /// </summary>
-        private async void StatusTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private async void StatusTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             _displayedActivity++;
 

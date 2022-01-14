@@ -17,8 +17,10 @@ namespace TRUCSBot.Commands
 {
     public class GameNightSuggestionCommands : BaseCommandModule
     {
-        private ILogger _logger;
-        private IGDBClient _igdb = new IGDBClient(Application.Current.Settings.IGDBClientId, Application.Current.Settings.IGDBClientSecret);
+        private readonly ILogger _logger;
+
+        private readonly IGDBClient _igdb = new(Application.Current.Settings.IGDBClientId,
+            Application.Current.Settings.IGDBClientSecret);
 
         public GameNightSuggestionCommands(ILogger<GameNightSuggestionCommands> logger)
         {
@@ -26,7 +28,8 @@ namespace TRUCSBot.Commands
         }
 
         [Command("suggestgame")]
-        public async Task SuggestGame(CommandContext ctx, [Description("The title of the game you want to suggest")] [RemainingText] string title)
+        public async Task SuggestGame(CommandContext ctx,
+            [Description("The title of the game you want to suggest")] [RemainingText] string title)
         {
             if (string.IsNullOrWhiteSpace(title))
             {
@@ -34,7 +37,7 @@ namespace TRUCSBot.Commands
                 return;
             }
 
-            var embed = new DiscordEmbedBuilder()
+            var embed = new DiscordEmbedBuilder
             {
                 Title = title,
                 Color = DiscordColor.White
@@ -42,12 +45,16 @@ namespace TRUCSBot.Commands
 
             try
             {
-                var games = await _igdb.QueryAsync<Game>(IGDBClient.Endpoints.Games, $"search \"{Sanitize(title)}\"; fields id,name,cover.*,involved_companies.company.name,platforms.name,summary,url,aggregated_rating;");
+                var games = await _igdb.QueryAsync<Game>(IGDBClient.Endpoints.Games,
+                    $"search \"{Sanitize(title)}\"; fields id,name,cover.*,involved_companies.company.name,platforms.name,summary,url,aggregated_rating;");
                 if (games.Length > 0)
                 {
-                    var game = games.OrderBy(x => LevenshteinDistance(title.ToLower(), x.Name.ToLower())).ThenByDescending(x => x.AggregatedRating).First();
+                    var game = games.OrderBy(x => LevenshteinDistance(title.ToLower(), x.Name.ToLower()))
+                        .ThenByDescending(x => x.AggregatedRating).First();
                     embed.Title = game.Name;
-                    embed.Description = string.IsNullOrEmpty(game.Summary) ? "No information is available for this title" : game.Summary;
+                    embed.Description = string.IsNullOrEmpty(game.Summary)
+                        ? "No information is available for this title"
+                        : game.Summary;
                     embed.Color = DiscordColor.Green;
                     embed.Url = game.Url;
 
@@ -61,7 +68,8 @@ namespace TRUCSBot.Commands
                     embed.ImageUrl = imgUrl;
                     if (game.InvolvedCompanies?.Values.Length > 0)
                     {
-                        embed.AddField("Created by", string.Join(", ", game.InvolvedCompanies.Values.Select(x => x.Company.Value.Name)));
+                        embed.AddField("Created by",
+                            string.Join(", ", game.InvolvedCompanies.Values.Select(x => x.Company.Value.Name)));
                     }
 
                     if (game.Platforms?.Values.Length > 0)
@@ -73,7 +81,6 @@ namespace TRUCSBot.Commands
                 {
                     embed.AddField("Additional Information", "Could not find game on IGDB.");
                 }
-
             }
             catch (Exception ex) when (!Debugger.IsAttached)
             {
@@ -84,7 +91,9 @@ namespace TRUCSBot.Commands
 
             try
             {
-                var message = await ctx.Message.Channel.Guild.GetChannel(Debugger.IsAttached ? 691903205545607201ul : 766406856050343996ul).SendMessageAsync(embed: embed);
+                var message = await ctx.Message.Channel.Guild
+                    .GetChannel(Debugger.IsAttached ? 691903205545607201ul : 766406856050343996ul)
+                    .SendMessageAsync(embed: embed);
                 await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":thumbsup:"));
                 await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":thumbsdown:"));
                 await message.CreateReactionAsync(DiscordEmoji.FromUnicode(ctx.Client, "💰"));
@@ -102,12 +111,12 @@ namespace TRUCSBot.Commands
         }
 
         /// <summary>
-        /// The Levenshtein distance between two words is the minimum number of single-character edits (i.e. insertions,
-        /// deletions or substitutions) required to change one word into the other. It is named after Vladimir
-        /// Levenshtein.
+        ///     The Levenshtein distance between two words is the minimum number of single-character edits (i.e. insertions,
+        ///     deletions or substitutions) required to change one word into the other. It is named after Vladimir
+        ///     Levenshtein.
         /// </summary>
         /// <remarks>Copied from https://www.csharpstar.com/csharp-string-distance-algorithm/.</remarks>
-        /// <returns>The Levenshtein distance from <paramref name="s"/> to <paramref name="t"/></returns>
+        /// <returns>The Levenshtein distance from <paramref name="s" /> to <paramref name="t" /></returns>
         private static int LevenshteinDistance(string s, string t)
         {
             int n = s.Length, m = t.Length;
@@ -140,7 +149,7 @@ namespace TRUCSBot.Commands
                 for (var j = 1; j <= m; j++)
                 {
                     // Step 5
-                    var cost = (t[j - 1] == s[i - 1]) ? 0 : 1;
+                    var cost = t[j - 1] == s[i - 1] ? 0 : 1;
 
                     // Step 6
                     d[i, j] = Math.Min(

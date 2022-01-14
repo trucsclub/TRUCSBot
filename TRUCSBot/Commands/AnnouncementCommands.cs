@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
 
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 
@@ -14,15 +13,15 @@ namespace TRUCSBot.Commands
     {
         [Command("queue")]
         [Description("Queue an announcement")]
-        [RequirePermissions(DSharpPlus.Permissions.MentionEveryone)]
+        [RequirePermissions(Permissions.MentionEveryone)]
         public async Task QueueAnnouncement(CommandContext ctx,
             [Description("Date to send")] string date,
             [Description("The time to send at")] string time,
-            [RemainingText, Description("The actual message")] string message)
+            [RemainingText] [Description("The actual message")] string message)
         {
             var del = ctx.Message.DeleteAsync();
 
-            var res = DateTime.TryParse(date, out DateTime d);
+            var res = DateTime.TryParse(date, out var d);
             if (!res)
             {
                 d = new DateTime();
@@ -38,7 +37,7 @@ namespace TRUCSBot.Commands
                 d = DateTime.Now.AddDays(1);
             }
 
-            res = TimeSpan.TryParse(time, out TimeSpan t);
+            res = TimeSpan.TryParse(time, out var t);
             if (!res)
             {
                 t = new TimeSpan(8, 0, 0);
@@ -51,7 +50,8 @@ namespace TRUCSBot.Commands
 
             var actualDate = new DateTime(d.Year, d.Month, d.Day, t.Hours, t.Minutes, t.Seconds);
 
-            var pm = ctx.Member.SendMessageAsync("Queued an announcement at " + actualDate.ToLongDateString() + " " + actualDate.ToLongTimeString() + " with the content: \n\n" + message);
+            var pm = ctx.Member.SendMessageAsync("Queued an announcement at " + actualDate.ToLongDateString() + " " +
+                                                 actualDate.ToLongTimeString() + " with the content: \n\n" + message);
 
             if (actualDate <= DateTime.Now.AddSeconds(5))
             {
@@ -65,7 +65,8 @@ namespace TRUCSBot.Commands
                 Application.Current.AnnouncementTimers.Add(timer);
                 timer.Elapsed += async (s, e) =>
                 {
-                    await ctx.Guild.Channels.First(x => x.Value.Name == "announcements").Value.SendMessageAsync(message);
+                    await ctx.Guild.Channels.First(x => x.Value.Name == "announcements").Value
+                        .SendMessageAsync(message);
                     Application.Current.AnnouncementTimers.Remove((Timer)s);
                     ((Timer)s).Stop();
                 };

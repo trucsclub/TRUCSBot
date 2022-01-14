@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 
@@ -10,9 +8,9 @@ namespace TRUCSBot.Commands
 {
     public class WednesdayCommands : BaseCommandModule
     {
-        private static Random _random = new Random();
+        private static readonly Random _random = new();
 
-        private static string[] _normalWednesdays =
+        private static readonly string[] _normalWednesdays =
         {
             "https://www.youtube.com/watch?v=9K4-jllrPrE",
             "https://www.youtube.com/watch?v=bbat6cvgEJ8",
@@ -66,9 +64,9 @@ namespace TRUCSBot.Commands
             "https://www.youtube.com/watch?v=EaVowG5Y2DI"
         };
 
-        private static string _halloweenWednesday = "https://www.youtube.com/watch?v=pXv4zQ6dYPQ";
-        private static string _christmasWednesday = "https://www.youtube.com/watch?v=1CH-7qjz4D4";
-        private static string _valentinesWednesday = "https://www.youtube.com/watch?v=_87k7gxeVsw";
+        private static readonly string _halloweenWednesday = "https://www.youtube.com/watch?v=pXv4zQ6dYPQ";
+        private static readonly string _christmasWednesday = "https://www.youtube.com/watch?v=1CH-7qjz4D4";
+        private static readonly string _valentinesWednesday = "https://www.youtube.com/watch?v=_87k7gxeVsw";
 
         [Command("wednesday")]
         [Description("It's Wednesday my dudes")]

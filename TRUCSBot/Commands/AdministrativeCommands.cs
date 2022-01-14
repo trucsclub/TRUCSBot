@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 using DSharpPlus;
@@ -13,7 +11,7 @@ using Microsoft.Extensions.Logging;
 namespace TRUCSBot.Commands
 {
     /// <summary>
-    /// This class handles administrative commands, that should require admin roles.
+    ///     This class handles administrative commands, that should require admin roles.
     /// </summary>
     [Description("Administrative Commands")]
     public class AdministrativeCommands : BaseCommandModule
@@ -53,7 +51,9 @@ namespace TRUCSBot.Commands
         [Command("nick")]
         [Description("Gives someone a new nickname.")]
         [RequirePermissions(Permissions.ManageNicknames)]
-        public async Task ChangeNickname(CommandContext ctx, [Description("Member to change the nickname for.")] DiscordMember member, [RemainingText, Description("The nickname to give to that user.")] string newNick)
+        public async Task ChangeNickname(CommandContext ctx,
+            [Description("Member to change the nickname for.")] DiscordMember member,
+            [RemainingText] [Description("The nickname to give to that user.")] string newNick)
         {
             try
             {
@@ -75,7 +75,8 @@ namespace TRUCSBot.Commands
         [Command("ban")]
         [Description("Bans a user, regardless of how many warnings they've had")]
         [RequirePermissions(Permissions.BanMembers)]
-        public async Task Ban(CommandContext ctx, DiscordMember member, [RemainingText, Description("Reason for their ban.")] string reason)
+        public async Task Ban(CommandContext ctx, DiscordMember member,
+            [RemainingText] [Description("Reason for their ban.")] string reason)
         {
             try
             {
@@ -87,6 +88,5 @@ namespace TRUCSBot.Commands
                 _logger.LogError("Couldn't complete Ban action", ex);
             }
         }
-
     }
 }

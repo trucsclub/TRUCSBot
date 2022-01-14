@@ -6,7 +6,7 @@ namespace TRUCSBot
     public partial class Application
     {
         public static Application Current { get; private set; }
-        public static bool IsShuttingDown = false;
+        public static bool IsShuttingDown;
         public event EventHandler ShutdownCompleted;
 
         public static string Directory => System.IO.Directory.GetParent(Assembly.GetEntryAssembly().Location).FullName;
