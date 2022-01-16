@@ -34,6 +34,8 @@ namespace TRUCSBot
 
         public string IgdbClientSecret { get; set; }
 
+        public ulong GameSuggestionChannelId { get; set; }
+
         public List<RoleCategorySettingsItem> ReactionRoles { get; } = new();
     }
 

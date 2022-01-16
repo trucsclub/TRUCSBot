@@ -93,7 +93,7 @@ namespace TRUCSBot.Commands
             try
             {
                 var message = await ctx.Message.Channel.Guild
-                    .GetChannel(Debugger.IsAttached ? 691903205545607201ul : 766406856050343996ul)
+                    .GetChannel(Application.Current.Settings.GameSuggestionChannelId)
                     .SendMessageAsync(embed: embed);
                 await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":thumbsup:"));
                 await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":thumbsdown:"));
