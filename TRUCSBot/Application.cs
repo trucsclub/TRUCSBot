@@ -172,9 +172,9 @@ namespace TRUCSBot
 
             _logger.LogInformation("{Count} status message(s) loaded", _activityList.Count);
 
-            if (Settings.WelcomeMessages.Count <= 0)
+            if (Settings.WelcomeMessages is not { Count: > 0 })
             {
-                Settings.WelcomeMessages.Add("Welcome {NICK}!");
+                Settings.WelcomeMessages = new List<string> { "Welcome {NICK}!" };
                 Settings.Save();
                 _logger.LogInformation("No welcome messages found in settings; set default");
             }
